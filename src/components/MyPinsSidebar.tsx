@@ -34,7 +34,7 @@ export default function MyPinsSidebar({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 z-[9998] bg-black/50 backdrop-blur-sm"
             onClick={onClose}
           />
           
@@ -43,7 +43,7 @@ export default function MyPinsSidebar({
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25 }}
-            className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-md glass-card rounded-l-2xl p-6 overflow-y-auto"
+            className="fixed right-0 top-0 bottom-0 z-[9999] w-full max-w-md glass-card rounded-l-2xl p-6 overflow-y-auto"
           >
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold">My Pins</h2>
