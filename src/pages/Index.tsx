@@ -4,7 +4,7 @@ import { MapPin, Moon, Sun, List } from 'lucide-react';
 import SimpleMap from '@/components/SimpleMap';
 import CreatePinModal from '@/components/CreatePinModal';
 import UnlockPinModal from '@/components/UnlockPinModal';
-import PhotoGallery from '@/components/PhotoGallery';
+import FileViewer from '@/components/FileViewer';
 import MyPinsSidebar from '@/components/MyPinsSidebar';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -52,18 +52,9 @@ export default function Index() {
   };
 
   const handlePinClick = (pin: Pin) => {
-    if (!userLocation) {
-      toast.error('Enable location to unlock memories');
-      return;
-    }
-
-    const [userLat, userLng] = userLocation;
-    if (isWithinRadius(userLat, userLng, pin.lat, pin.lng, 100)) {
-      setSelectedPin(pin);
-      setUnlockModalOpen(true);
-    } else {
-      toast.error('You must be within 100m to unlock this memory');
-    }
+    // Tap-based unlock - no location check needed
+    setSelectedPin(pin);
+    setUnlockModalOpen(true);
   };
 
   const handleSavePin = async (pin: Pin) => {
@@ -169,10 +160,10 @@ export default function Index() {
         onUnlock={handleUnlock}
       />
 
-      <PhotoGallery
+      <FileViewer
         isOpen={galleryOpen}
         onClose={() => setGalleryOpen(false)}
-        photos={selectedPin?.photos || []}
+        files={selectedPin?.files || []}
       />
 
       <MyPinsSidebar

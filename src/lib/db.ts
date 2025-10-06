@@ -1,8 +1,11 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
 
-export interface Photo {
+export interface MemoryFile {
   id: string;
   data: string; // base64 encoded
+  type: 'image' | 'video' | 'audio' | 'document';
+  mimeType: string;
+  name: string;
   timestamp: number;
 }
 
@@ -11,7 +14,7 @@ export interface Pin {
   lat: number;
   lng: number;
   pinHash: string;
-  photos: Photo[];
+  files: MemoryFile[];
   createdAt: number;
 }
 

@@ -1,12 +1,12 @@
 import { useState, ChangeEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Upload, Lock } from 'lucide-react';
+import { X, Upload, Lock, FileIcon, Image, Video, Music, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { hashPin } from '@/lib/crypto';
-import { compressImage } from '@/lib/image';
-import { Pin, Photo } from '@/lib/db';
+import { processFile, getFileType, ALL_ACCEPTED_TYPES } from '@/lib/files';
+import { Pin, MemoryFile } from '@/lib/db';
 import { toast } from 'sonner';
 
 interface CreatePinModalProps {
@@ -17,30 +17,42 @@ interface CreatePinModalProps {
   onSave: (pin: Pin) => void;
 }
 
+const FILE_ICONS = {
+  image: Image,
+  video: Video,
+  audio: Music,
+  document: FileText,
+};
+
 export default function CreatePinModal({ isOpen, onClose, lat, lng, onSave }: CreatePinModalProps) {
   const [pin, setPin] = useState('');
-  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [files, setFiles] = useState<MemoryFile[]>([]);
   const [loading, setLoading] = useState(false);
 
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
+    const selectedFiles = e.target.files;
+    if (!selectedFiles) return;
 
     setLoading(true);
     try {
-      const newPhotos: Photo[] = [];
-      for (const file of Array.from(files)) {
-        const compressed = await compressImage(file);
-        newPhotos.push({
+      const newFiles: MemoryFile[] = [];
+      for (const file of Array.from(selectedFiles)) {
+        const processedData = await processFile(file);
+        const fileType = getFileType(file.type);
+        
+        newFiles.push({
           id: crypto.randomUUID(),
-          data: compressed,
+          data: processedData,
+          type: fileType,
+          mimeType: file.type,
+          name: file.name,
           timestamp: Date.now(),
         });
       }
-      setPhotos((prev) => [...prev, ...newPhotos]);
-      toast.success(`Added ${newPhotos.length} photo(s)`);
+      setFiles((prev) => [...prev, ...newFiles]);
+      toast.success(`Added ${newFiles.length} file(s)`);
     } catch (error) {
-      toast.error('Failed to process images');
+      toast.error(error instanceof Error ? error.message : 'Failed to process files');
     } finally {
       setLoading(false);
     }
@@ -52,8 +64,8 @@ export default function CreatePinModal({ isOpen, onClose, lat, lng, onSave }: Cr
       return;
     }
 
-    if (photos.length === 0) {
-      toast.error('Please upload at least one photo');
+    if (files.length === 0) {
+      toast.error('Please upload at least one file');
       return;
     }
 
@@ -65,7 +77,7 @@ export default function CreatePinModal({ isOpen, onClose, lat, lng, onSave }: Cr
         lat,
         lng,
         pinHash,
-        photos,
+        files,
         createdAt: Date.now(),
       };
 
@@ -81,8 +93,12 @@ export default function CreatePinModal({ isOpen, onClose, lat, lng, onSave }: Cr
 
   const handleClose = () => {
     setPin('');
-    setPhotos([]);
+    setFiles([]);
     onClose();
+  };
+
+  const removeFile = (id: string) => {
+    setFiles((prev) => prev.filter((f) => f.id !== id));
   };
 
   return (
@@ -100,7 +116,7 @@ export default function CreatePinModal({ isOpen, onClose, lat, lng, onSave }: Cr
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             transition={{ type: 'spring', damping: 20 }}
-            className="glass-card w-full max-w-md p-6 relative"
+            className="glass-card w-full max-w-md p-6 relative max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -140,48 +156,57 @@ export default function CreatePinModal({ isOpen, onClose, lat, lng, onSave }: Cr
               </div>
 
               <div>
-                <Label htmlFor="photos" className="text-sm font-medium">
-                  Upload Photos
+                <Label htmlFor="files" className="text-sm font-medium">
+                  Upload Files
                 </Label>
                 <label
-                  htmlFor="photos"
+                  htmlFor="files"
                   className="mt-1.5 flex items-center justify-center gap-2 p-6 border-2 border-dashed border-border rounded-xl hover:border-primary/50 cursor-pointer transition-colors"
                 >
                   <Upload className="w-5 h-5 text-muted-foreground" />
                   <span className="text-sm text-muted-foreground">
-                    {photos.length > 0 ? `${photos.length} photo(s) selected` : 'Choose photos'}
+                    {files.length > 0 ? `${files.length} file(s) selected` : 'Choose files'}
                   </span>
                 </label>
                 <input
-                  id="photos"
+                  id="files"
                   type="file"
-                  accept="image/*"
+                  accept={ALL_ACCEPTED_TYPES}
                   multiple
                   onChange={handleFileChange}
                   className="hidden"
                 />
+                <p className="text-xs text-muted-foreground mt-2">
+                  Images, videos, audio, documents supported
+                </p>
               </div>
 
-              {photos.length > 0 && (
-                <div className="grid grid-cols-3 gap-2">
-                  {photos.map((photo) => (
-                    <div
-                      key={photo.id}
-                      className="aspect-square rounded-lg overflow-hidden bg-muted"
-                    >
-                      <img
-                        src={photo.data}
-                        alt="Memory"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ))}
+              {files.length > 0 && (
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {files.map((file) => {
+                    const Icon = FILE_ICONS[file.type];
+                    return (
+                      <div
+                        key={file.id}
+                        className="flex items-center gap-3 p-3 rounded-lg bg-muted/50"
+                      >
+                        <Icon className="w-5 h-5 text-primary" />
+                        <span className="flex-1 text-sm truncate">{file.name}</span>
+                        <button
+                          onClick={() => removeFile(file.id)}
+                          className="p-1 hover:bg-muted rounded-full transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 
               <Button
                 onClick={handleSubmit}
-                disabled={loading || pin.length !== 4 || photos.length === 0}
+                disabled={loading || pin.length !== 4 || files.length === 0}
                 className="w-full bg-gradient-primary hover:opacity-90 transition-opacity text-white font-semibold"
                 size="lg"
               >

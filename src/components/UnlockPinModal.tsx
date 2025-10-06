@@ -83,7 +83,7 @@ export default function UnlockPinModal({ isOpen, onClose, pin, onUnlock }: Unloc
               <div>
                 <h2 className="text-2xl font-bold">Unlock Memory</h2>
                 <p className="text-sm text-muted-foreground">
-                  {pin.photos.length} photo{pin.photos.length !== 1 ? 's' : ''} locked here
+                  {pin.files.length} file{pin.files.length !== 1 ? 's' : ''} locked here
                 </p>
               </div>
             </div>

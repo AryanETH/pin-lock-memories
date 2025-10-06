@@ -81,7 +81,7 @@ export default function MyPinsSidebar({
                           {pin.lat.toFixed(4)}, {pin.lng.toFixed(4)}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {pin.photos.length} photo{pin.photos.length !== 1 ? 's' : ''}
+                          {pin.files.length} file{pin.files.length !== 1 ? 's' : ''}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {new Date(pin.createdAt).toLocaleDateString()}
@@ -89,18 +89,26 @@ export default function MyPinsSidebar({
                       </div>
                     </div>
 
-                    {pin.photos.length > 0 && (
+                    {pin.files.length > 0 && (
                       <div className="grid grid-cols-3 gap-2">
-                        {pin.photos.slice(0, 3).map((photo) => (
+                        {pin.files.slice(0, 3).map((file) => (
                           <div
-                            key={photo.id}
-                            className="aspect-square rounded-lg overflow-hidden"
+                            key={file.id}
+                            className="aspect-square rounded-lg overflow-hidden bg-muted flex items-center justify-center"
                           >
-                            <img
-                              src={photo.data}
-                              alt="Memory"
-                              className="w-full h-full object-cover"
-                            />
+                            {file.type === 'image' ? (
+                              <img
+                                src={file.data}
+                                alt="Memory"
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-2xl">
+                                {file.type === 'video' && '🎥'}
+                                {file.type === 'audio' && '🎵'}
+                                {file.type === 'document' && '📄'}
+                              </span>
+                            )}
                           </div>
                         ))}
                       </div>

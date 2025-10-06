@@ -56,44 +56,44 @@ export default function SimpleMap({ pins, onMapClick, onPinClick, userLocation }
     }
   }, [userLocation]);
 
-  // Update markers
+  // Handle map clicks to detect nearby pins
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    const map = mapRef.current;
+    
+    // Remove old click handler if exists
+    map.off('click');
+    
+    // Add new click handler
+    map.on('click', (e: L.LeafletMouseEvent) => {
+      const clickLat = e.latlng.lat;
+      const clickLng = e.latlng.lng;
+      
+      // Check if click is within 100m of any pin
+      const nearbyPin = pins.find(pin => {
+        const distance = map.distance([clickLat, clickLng], [pin.lat, pin.lng]);
+        return distance <= 100; // 100 meters
+      });
+      
+      if (nearbyPin) {
+        // Found a nearby pin, trigger unlock
+        onPinClick(nearbyPin);
+      } else {
+        // No nearby pin, create new memory
+        onMapClick(clickLat, clickLng);
+      }
+    });
+  }, [pins, onMapClick, onPinClick]);
+
+  // Update user location marker only
   useEffect(() => {
     if (!mapRef.current) return;
 
     const map = mapRef.current;
     const currentMarkers = markersRef.current;
 
-    // Remove markers that no longer exist
-    const pinIds = new Set(pins.map(p => p.id));
-    currentMarkers.forEach((marker, id) => {
-      if (!pinIds.has(id)) {
-        marker.remove();
-        currentMarkers.delete(id);
-      }
-    });
-
-    // Add or update markers
-    pins.forEach((pin) => {
-      let marker = currentMarkers.get(pin.id);
-      
-      if (!marker) {
-        marker = L.marker([pin.lat, pin.lng])
-          .addTo(map)
-          .bindPopup(`
-            <div class="text-center p-2">
-              <p class="text-sm font-medium">Memory Locked</p>
-              <p class="text-xs text-muted-foreground mt-1">
-                ${pin.photos.length} photo${pin.photos.length !== 1 ? 's' : ''}
-              </p>
-            </div>
-          `)
-          .on('click', () => onPinClick(pin));
-        
-        currentMarkers.set(pin.id, marker);
-      }
-    });
-
-    // Add user location marker if available
+    // Only manage user location marker
     if (userLocation && !currentMarkers.has('user-location')) {
       const userMarker = L.marker(userLocation)
         .addTo(map)
@@ -105,7 +105,7 @@ export default function SimpleMap({ pins, onMapClick, onPinClick, userLocation }
     } else if (userLocation && currentMarkers.has('user-location')) {
       currentMarkers.get('user-location')?.setLatLng(userLocation);
     }
-  }, [pins, userLocation, onPinClick]);
+  }, [userLocation]);
 
   return (
     <motion.div

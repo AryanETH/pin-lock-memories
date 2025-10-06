@@ -1,3 +1,26 @@
+export async function processFile(
+  file: File,
+  maxSize: number = 10 * 1024 * 1024 // 10MB default
+): Promise<string> {
+  // Check file size
+  if (file.size > maxSize) {
+    throw new Error(`File size exceeds ${maxSize / 1024 / 1024}MB limit`);
+  }
+
+  // For images, compress them
+  if (file.type.startsWith('image/')) {
+    return compressImage(file);
+  }
+
+  // For other files, convert to base64
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+  });
+}
+
 export async function compressImage(
   file: File,
   maxWidth: number = 1200,
@@ -45,3 +68,19 @@ export async function compressImage(
     reader.onerror = reject;
   });
 }
+
+export function getFileType(mimeType: string): 'image' | 'video' | 'audio' | 'document' {
+  if (mimeType.startsWith('image/')) return 'image';
+  if (mimeType.startsWith('video/')) return 'video';
+  if (mimeType.startsWith('audio/')) return 'audio';
+  return 'document';
+}
+
+export const ACCEPTED_FILE_TYPES = {
+  image: 'image/jpeg,image/png,image/gif,image/webp',
+  video: 'video/mp4,video/quicktime,video/x-msvideo,video/webm',
+  audio: 'audio/mpeg,audio/wav,audio/mp4,audio/x-m4a',
+  document: 'application/pdf,.doc,.docx,.txt',
+};
+
+export const ALL_ACCEPTED_TYPES = Object.values(ACCEPTED_FILE_TYPES).join(',');
