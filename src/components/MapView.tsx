@@ -34,9 +34,46 @@ function MapClickHandler({ onClick }: { onClick: (lat: number, lng: number) => v
   return null;
 }
 
+function PinMarkers({ pins, onPinClick }: { pins: Pin[]; onPinClick: (pin: Pin) => void }) {
+  return (
+    <>
+      {pins.map((pin) => (
+        <Marker
+          key={pin.id}
+          position={[pin.lat, pin.lng]}
+          icon={defaultIcon}
+          eventHandlers={{
+            click: () => onPinClick(pin),
+          }}
+        >
+          <Popup>
+            <div className="text-center p-2">
+              <MapPin className="w-5 h-5 mx-auto mb-2 text-primary" />
+              <p className="text-sm font-medium">Memory Locked</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {pin.photos.length} photo{pin.photos.length !== 1 ? 's' : ''}
+              </p>
+            </div>
+          </Popup>
+        </Marker>
+      ))}
+    </>
+  );
+}
+
+function UserLocationMarker({ position }: { position: [number, number] }) {
+  return (
+    <Marker position={position} icon={defaultIcon}>
+      <Popup>
+        <p className="text-sm font-medium">You are here</p>
+      </Popup>
+    </Marker>
+  );
+}
+
 export default function MapView({ pins, onMapClick, onPinClick, userLocation }: MapViewProps) {
-  const defaultCenter: [number, number] = userLocation || [37.7749, -122.4194]; // SF default
-  const [mapCenter, setMapCenter] = useState<[number, number]>(defaultCenter);
+  const defaultCenter: [number, number] = [37.7749, -122.4194]; // SF default
+  const [mapCenter, setMapCenter] = useState<[number, number]>(userLocation || defaultCenter);
 
   useEffect(() => {
     if (userLocation) {
@@ -58,40 +95,9 @@ export default function MapView({ pins, onMapClick, onPinClick, userLocation }: 
         zoomControl={true}
       >
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        
         <MapClickHandler onClick={onMapClick} />
-
-        {pins.map((pin) => (
-          <Marker
-            key={pin.id}
-            position={[pin.lat, pin.lng]}
-            icon={defaultIcon}
-            eventHandlers={{
-              click: () => onPinClick(pin),
-            }}
-          >
-            <Popup>
-              <div className="text-center p-2">
-                <MapPin className="w-5 h-5 mx-auto mb-2 text-primary" />
-                <p className="text-sm font-medium">Memory Locked</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {pin.photos.length} photo{pin.photos.length !== 1 ? 's' : ''}
-                </p>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-
-        {userLocation && (
-          <Marker
-            position={userLocation}
-            icon={defaultIcon}
-          >
-            <Popup>
-              <p className="text-sm font-medium">You are here</p>
-            </Popup>
-          </Marker>
-        )}
+        <PinMarkers pins={pins} onPinClick={onPinClick} />
+        {userLocation ? <UserLocationMarker position={userLocation} /> : null}
       </MapContainer>
     </motion.div>
   );
