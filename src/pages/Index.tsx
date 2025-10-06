@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Moon, Sun, List } from 'lucide-react';
-import MapView from '@/components/MapView';
+import SimpleMap from '@/components/SimpleMap';
 import CreatePinModal from '@/components/CreatePinModal';
 import UnlockPinModal from '@/components/UnlockPinModal';
 import PhotoGallery from '@/components/PhotoGallery';
@@ -128,7 +128,7 @@ export default function Index() {
 
       {/* Map */}
       <div className="absolute inset-0 pt-20 pb-6 px-6">
-        <MapView
+        <SimpleMap
           pins={pins}
           onMapClick={handleMapClick}
           onPinClick={handlePinClick}
