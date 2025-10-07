@@ -48,7 +48,7 @@ export default function SharedMemory() {
           <p className="text-sm text-muted-foreground mb-4">Shared memory. Anyone with this link can view it—no PIN required.</p>
           <p className="text-xs text-muted-foreground mb-4">Views this session: {viewsThisSession}</p>
           <Button className="bg-gradient-primary text-white" onClick={() => setGalleryOpen(true)}>Open Gallery</Button>
-          <Button variant="ghost" className="ml-2 text-destructive" onClick={() => toast.message('Thanks for the report. Our team will review.')}>Report memory</Button>
+          <Button variant="ghost" className="ml-2 text-destructive" onClick={() => toast.success('Thanks for the report. Our team will review. 📝')}>Report memory</Button>
         </div>
       </div>
 

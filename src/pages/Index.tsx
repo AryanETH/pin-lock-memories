@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Moon, Sun, Eye, Lock, Share2, Globe, Shield } from 'lucide-react';
+import { MapPin, Moon, Sun, Eye, Lock, Share2, Globe, Shield, Map } from 'lucide-react';
 import SimpleMap from '@/components/SimpleMap';
 import CreatePinModal from '@/components/CreatePinModal';
 import UnlockPinModal from '@/components/UnlockPinModal';
@@ -25,11 +25,46 @@ export default function Index() {
   const [retapModalOpen, setRetapModalOpen] = useState(false);
   const [retapTargetPin, setRetapTargetPin] = useState<Pin | null>(null);
   const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [locationShareModalOpen, setLocationShareModalOpen] = useState(false);
+  const [sharedLocation, setSharedLocation] = useState<{ lat: number; lng: number; zoom: number; pinId?: string } | null>(null);
 
   useEffect(() => {
     loadPins();
     getUserLocation();
   }, []);
+
+  // Handle URL params after pins are loaded
+  useEffect(() => {
+    if (pins.length > 0) {
+      handleUrlParams();
+    }
+  }, [pins]);
+
+  const handleUrlParams = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const lat = urlParams.get('lat');
+    const lng = urlParams.get('lng');
+    const zoom = urlParams.get('zoom');
+    const pinId = urlParams.get('pinId');
+
+    if (lat && lng) {
+      const latNum = parseFloat(lat);
+      const lngNum = parseFloat(lng);
+      const zoomNum = zoom ? parseInt(zoom) : 15;
+      
+      // Set the shared location for the modal
+      setSharedLocation({ lat: latNum, lng: lngNum, zoom: zoomNum });
+      
+      // If there's a pinId, try to find and open that pin
+      if (pinId) {
+        const targetPin = pins.find(p => p.id === pinId);
+        if (targetPin) {
+          setSelectedPin(targetPin);
+          setUnlockModalOpen(true);
+        }
+      }
+    }
+  };
 
   const loadPins = async () => {
     try {
@@ -102,6 +137,24 @@ export default function Index() {
     await loadPins();
   };
 
+  const handleShareLocation = (lat: number, lng: number, zoom: number, pinId?: string) => {
+    setSharedLocation({ lat, lng, zoom, pinId });
+    setLocationShareModalOpen(true);
+  };
+
+  const generateLocationShareLink = (lat: number, lng: number, zoom: number, pinId?: string) => {
+    const baseUrl = window.location.origin;
+    const params = new URLSearchParams({
+      lat: lat.toFixed(6),
+      lng: lng.toFixed(6),
+      zoom: zoom.toString()
+    });
+    if (pinId) {
+      params.set('pinId', pinId);
+    }
+    return `${baseUrl}?${params.toString()}`;
+  };
+
   return (
     <div className="relative h-screen w-full overflow-hidden bg-gradient-to-br from-background via-background to-primary/5">
       {/* Header Bar */}
@@ -146,6 +199,7 @@ export default function Index() {
           onMapClick={handleMapClick}
           onPinClick={handlePinClick}
           userLocation={userLocation}
+          onShareLocation={handleShareLocation}
         />
       </div>
 
@@ -180,7 +234,8 @@ export default function Index() {
               <div className="p-3 rounded-full bg-gradient-primary"><MapPin className="w-6 h-6 text-white" /></div>
               <div>
                 <h3 className="text-xl font-semibold">This location already holds your memories</h3>
-                <p className="text-xs text-muted-foreground">{retapTargetPin.name || 'Saved Memory'}</p>
+                <p className="text-xs text-muted-foreground">What would you like to do?</p>
+                <p className="text-xs text-muted-foreground mt-1">{retapTargetPin.name || 'Saved Memory'}</p>
               </div>
             </div>
             <div className="grid grid-cols-1 gap-3">
@@ -205,7 +260,7 @@ export default function Index() {
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={() => setShareModalOpen(false)}>
           <motion.div initial={{ scale: 0.96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.96, opacity: 0 }} transition={{ type: 'spring', damping: 18 }} className="glass-card w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-xl font-semibold mb-2">Share your space link</h3>
-            <p className="text-sm text-muted-foreground mb-4">Anyone with this link can view it—no PIN required.</p>
+            <p className="text-sm text-muted-foreground mb-4">Share your space link. Anyone with this link can view it—no PIN required.</p>
             <div className="flex items-center justify-between rounded-xl bg-muted/40 p-3 mb-3">
               <div>
                 <p className="text-sm font-medium">Make memory public</p>
@@ -215,7 +270,7 @@ export default function Index() {
                 await updatePin(retapTargetPin.id, { isPublic: checked });
                 setRetapTargetPin({ ...retapTargetPin, isPublic: checked });
                 await loadPins();
-                toast.success(checked ? 'Memory is now public' : 'Memory set to private');
+                toast.success(checked ? 'Memory is now public 🌐' : 'Memory set to private 🔒');
               }} />
             </div>
             <div className="space-y-3">
@@ -224,19 +279,82 @@ export default function Index() {
               </div>
               <div className="flex gap-2">
                 {!retapTargetPin.shareToken ? (
-                  <Button onClick={async () => { await handleGenerateShare(retapTargetPin); toast.success('Shareable link created'); }} className="bg-gradient-primary text-white">Create Link</Button>
+                  <Button onClick={async () => { await handleGenerateShare(retapTargetPin); toast.success('Shareable link created! 🔗'); }} className="bg-gradient-primary text-white">Create Link</Button>
                 ) : (
                   <>
-                    <Button onClick={() => { navigator.clipboard.writeText(`${location.origin}/memory/${retapTargetPin.shareToken}`); toast.success('Link copied'); }} className="bg-gradient-primary text-white">Copy Link</Button>
-                    <Button variant="secondary" onClick={async () => { await handleGenerateShare(retapTargetPin); toast.success('Link regenerated'); }}>Regenerate</Button>
-                    <Button variant="destructive" onClick={async () => { await handleRevokeShare(retapTargetPin); toast.success('Link revoked'); }}>Revoke</Button>
+                    <Button onClick={() => { navigator.clipboard.writeText(`${location.origin}/memory/${retapTargetPin.shareToken}`); toast.success('Link copied to clipboard! 📋'); }} className="bg-gradient-primary text-white">Copy Link</Button>
+                    <Button variant="secondary" onClick={async () => { await handleGenerateShare(retapTargetPin); toast.success('Link regenerated! 🔄'); }}>Regenerate</Button>
+                    <Button variant="destructive" onClick={async () => { await handleRevokeShare(retapTargetPin); toast.success('Link revoked! 🚫'); }}>Revoke</Button>
                   </>
                 )}
               </div>
             </div>
-          </motion.div>
-        </div>
-      )}
-    </div>
-  );
-}
+           </motion.div>
+         </div>
+       )}
+
+       {/* Location Share Modal */}
+       {locationShareModalOpen && sharedLocation && (
+         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={() => setLocationShareModalOpen(false)}>
+           <motion.div initial={{ scale: 0.96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.96, opacity: 0 }} transition={{ type: 'spring', damping: 18 }} className="glass-card w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
+             <div className="flex items-center gap-3 mb-4">
+               <div className="p-3 rounded-full bg-gradient-primary">
+                 <Map className="w-6 h-6 text-white" />
+               </div>
+               <div>
+                 <h3 className="text-xl font-semibold">
+                   {sharedLocation.pinId ? 'Share Pin Location' : 'Share Map Location'}
+                 </h3>
+                 <p className="text-sm text-muted-foreground">
+                   {sharedLocation.pinId 
+                     ? 'Share this pin location with your friends. They can unlock it directly!' 
+                     : 'Share this exact map view with your friends'
+                   }
+                 </p>
+               </div>
+             </div>
+             
+             <div className="space-y-4">
+               {sharedLocation.pinId && (
+                 <div className="p-3 rounded-xl bg-muted/40">
+                   <p className="text-xs text-muted-foreground mb-2">Pin:</p>
+                   <p className="text-sm font-medium">
+                     {pins.find(p => p.id === sharedLocation.pinId)?.name || 'Unknown Pin'}
+                   </p>
+                 </div>
+               )}
+               <div className="p-3 rounded-xl bg-muted/40">
+                 <p className="text-xs text-muted-foreground mb-2">Coordinates:</p>
+                 <p className="text-sm font-mono">{sharedLocation.lat.toFixed(6)}, {sharedLocation.lng.toFixed(6)}</p>
+                 <p className="text-xs text-muted-foreground mt-1">Zoom: {sharedLocation.zoom}</p>
+               </div>
+               
+               <div className="p-3 rounded-xl bg-muted/40 break-all text-sm">
+                 {generateLocationShareLink(sharedLocation.lat, sharedLocation.lng, sharedLocation.zoom, sharedLocation.pinId)}
+               </div>
+               
+               <div className="flex gap-2">
+                 <Button 
+                   onClick={() => {
+                     navigator.clipboard.writeText(generateLocationShareLink(sharedLocation.lat, sharedLocation.lng, sharedLocation.zoom, sharedLocation.pinId));
+                     toast.success('Location link copied to clipboard! 📋');
+                   }} 
+                   className="bg-gradient-primary text-white flex-1"
+                 >
+                   <Share2 className="w-4 h-4 mr-2" />
+                   Copy Link
+                 </Button>
+                 <Button 
+                   variant="secondary" 
+                   onClick={() => setLocationShareModalOpen(false)}
+                 >
+                   Close
+                 </Button>
+               </div>
+             </div>
+           </motion.div>
+         </div>
+       )}
+     </div>
+   );
+ }

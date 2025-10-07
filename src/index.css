@@ -135,6 +135,12 @@ All colors MUST be HSL.
     margin-bottom: 14px;
     border-radius: 16px;
     overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .map-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 60px -10px hsl(262 83% 58% / 0.3);
   }
   .glass {
     @apply bg-white/10 dark:bg-black/20 backdrop-blur-2xl border border-white/20 dark:border-white/10;
@@ -193,5 +199,107 @@ All colors MUST be HSL.
     to {
       opacity: 1;
     }
+  }
+
+  /* Pin marker animations */
+  .pin-marker {
+    animation: pinPulse 2s infinite;
+  }
+
+  .pin-marker:hover {
+    transform: rotate(-45deg) scale(1.1);
+    animation: none;
+  }
+
+  @keyframes pinPulse {
+    0% {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    50% {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3), 0 0 0 8px rgba(139, 92, 246, 0.2);
+    }
+    100% {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+  }
+
+  .pin-marker.public {
+    animation: publicPinPulse 2s infinite;
+  }
+
+  @keyframes publicPinPulse {
+    0% {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    50% {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3), 0 0 0 8px rgba(16, 185, 129, 0.2);
+    }
+    100% {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+  }
+
+  /* Custom pin popup styles */
+  .pin-popup {
+    @apply p-2;
+  }
+
+  .share-location-btn {
+    @apply w-full mt-2 px-3 py-2 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-medium rounded-lg transition-colors flex items-center justify-center gap-2;
+  }
+
+  .share-location-btn:hover {
+    @apply bg-primary/20;
+  }
+
+  /* Share link container in pin popup */
+  .share-section {
+    @apply mt-3 pt-3 border-t border-border/50;
+  }
+
+  .share-link-container {
+    @apply flex gap-2 items-center;
+  }
+
+  .share-link-input {
+    @apply flex-1 px-2 py-1 text-xs bg-muted/50 border border-border/50 rounded text-foreground;
+    font-family: monospace;
+    word-break: break-all;
+  }
+
+  .share-link-input:focus {
+    @apply outline-none ring-2 ring-primary/50 border-primary/50;
+  }
+
+  .copy-btn {
+    @apply px-2 py-1 bg-primary/10 hover:bg-primary/20 text-primary rounded transition-colors flex items-center justify-center;
+  }
+
+  .copy-btn:hover {
+    @apply bg-primary/20;
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Enhanced map controls */
+  .map-controls {
+    backdrop-filter: blur(16px);
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.2);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  }
+
+  .dark .map-controls {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.1);
   }
 }

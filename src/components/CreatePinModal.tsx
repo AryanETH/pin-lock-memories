@@ -156,6 +156,9 @@ export default function CreatePinModal({ isOpen, onClose, lat, lng, onSave, pres
                 <p className="text-sm text-muted-foreground">
                   {lat.toFixed(4)}, {lng.toFixed(4)}
                 </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Set a 4–8-digit PIN to protect your memory. Choose whether to keep it private or make it public.
+                </p>
               </div>
             </div>
 
@@ -278,7 +281,7 @@ export default function CreatePinModal({ isOpen, onClose, lat, lng, onSave, pres
 
               <Button
                 onClick={handleSubmit}
-                disabled={loading || pin.length !== 4 || files.length === 0}
+                disabled={loading || (!presetPinHash && (pin.length < 4 || pin.length > 8)) || files.length === 0 || name.trim().length === 0}
                 className="w-full bg-gradient-primary hover:opacity-90 transition-opacity text-white font-semibold"
                 size="lg"
               >

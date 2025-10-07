@@ -95,7 +95,10 @@ export default function UnlockPinModal({ isOpen, onClose, pin, onUnlock }: Unloc
               <div>
                 <h2 className="text-2xl font-bold">Unlock Memory</h2>
                 <p className="text-sm text-muted-foreground">
-                  {pin.isPublic ? 'This spot holds a public memory.' : 'Private memory.'} {pin.files.length} file{pin.files.length !== 1 ? 's' : ''} locked here
+                  {pin.isPublic ? 'This spot holds a public memory. Enter the PIN to unlock.' : 'Private memory. Enter your PIN to unlock.'}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {pin.files.length} file{pin.files.length !== 1 ? 's' : ''} • {pin.name}
                 </p>
               </div>
             </div>
@@ -116,7 +119,7 @@ export default function UnlockPinModal({ isOpen, onClose, pin, onUnlock }: Unloc
 
               <Button
                 onClick={handleSubmit}
-                disabled={loading || inputPin.length !== 4}
+                disabled={loading || inputPin.length < 4 || inputPin.length > 8}
                 className="w-full bg-gradient-primary hover:opacity-90 transition-opacity text-white font-semibold"
                 size="lg"
               >
