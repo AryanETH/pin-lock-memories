@@ -4,7 +4,7 @@ import { X, Unlock, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { verifyPin } from '@/lib/crypto';
-import { Pin } from '@/lib/db';
+import { Pin, recordFailedAttempt, clearFailedAttempts } from '@/lib/db';
 import { toast } from 'sonner';
 
 interface UnlockPinModalProps {
@@ -20,18 +20,30 @@ export default function UnlockPinModal({ isOpen, onClose, pin, onUnlock }: Unloc
   const [shake, setShake] = useState(false);
 
   const handleSubmit = async () => {
-    if (!pin || inputPin.length !== 4) return;
+    if (!pin || inputPin.length < 4 || inputPin.length > 8) return;
 
     setLoading(true);
     try {
+      if (pin.lockUntil && Date.now() < pin.lockUntil) {
+        const wait = Math.ceil((pin.lockUntil - Date.now()) / 1000);
+        toast.error(`Too many attempts. Try again in ${wait}s`);
+        return;
+      }
       const isValid = await verifyPin(inputPin, pin.pinHash);
       if (isValid) {
         onUnlock(pin);
         toast.success('Memory unlocked! 🔓');
+        await clearFailedAttempts(pin.id);
         handleClose();
       } else {
         setShake(true);
-        toast.error('Invalid PIN');
+        const attempt = await recordFailedAttempt(pin.id);
+        if (attempt?.lockedUntil) {
+          const wait = Math.ceil((attempt.lockedUntil - Date.now()) / 1000);
+          toast.error(`Too many attempts. Locked for ${wait}s`);
+        } else {
+          toast.error('Invalid PIN');
+        }
         setTimeout(() => setShake(false), 400);
       }
     } catch (error) {
@@ -83,7 +95,7 @@ export default function UnlockPinModal({ isOpen, onClose, pin, onUnlock }: Unloc
               <div>
                 <h2 className="text-2xl font-bold">Unlock Memory</h2>
                 <p className="text-sm text-muted-foreground">
-                  {pin.files.length} file{pin.files.length !== 1 ? 's' : ''} locked here
+                  {pin.isPublic ? 'This spot holds a public memory.' : 'Private memory.'} {pin.files.length} file{pin.files.length !== 1 ? 's' : ''} locked here
                 </p>
               </div>
             </div>
@@ -93,7 +105,7 @@ export default function UnlockPinModal({ isOpen, onClose, pin, onUnlock }: Unloc
                 <Input
                   type="password"
                   inputMode="numeric"
-                  maxLength={4}
+                  maxLength={8}
                   value={inputPin}
                   onChange={(e) => setInputPin(e.target.value.replace(/\D/g, ''))}
                   placeholder="Enter PIN"

@@ -51,7 +51,7 @@ function PinMarkers({ pins, onPinClick }: { pins: Pin[]; onPinClick: (pin: Pin) 
               <MapPin className="w-5 h-5 mx-auto mb-2 text-primary" />
               <p className="text-sm font-medium">Memory Locked</p>
               <p className="text-xs text-muted-foreground mt-1">
-                {pin.photos.length} photo{pin.photos.length !== 1 ? 's' : ''}
+                {pin.files.length} file{pin.files.length !== 1 ? 's' : ''}
               </p>
             </div>
           </Popup>
