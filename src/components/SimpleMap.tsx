@@ -139,41 +139,41 @@ export default function SimpleMap({ pins, onMapClick, onPinClick, userLocation }
       className="relative h-full w-full"
     >
       {/* Map Container with 3:4 aspect ratio on mobile */}
-      <div className="w-full h-full md:h-full aspect-[3/4] md:aspect-auto rounded-3xl overflow-hidden shadow-elevated mt-3.5 mb-3.5">
+      <div className="w-full h-full md:h-full aspect-[3/4] md:aspect-auto rounded-3xl overflow-hidden shadow-elevated">
         <div ref={containerRef} className="h-full w-full" />
       </div>
 
-      {/* Map View Toggle Buttons - Centered at bottom */}
+      {/* Map View Toggle Buttons */}
       <motion.div
         initial={{ y: 50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3, type: 'spring', damping: 20 }}
-        className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-3 z-[1000] backdrop-blur-xl bg-white/15 dark:bg-black/15 rounded-full px-4 py-1.5 shadow-lg border border-white/20"
+        className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-[1000]"
       >
         <Button
           onClick={() => setMapView('standard')}
-          variant={mapView === 'standard' ? 'default' : 'ghost'}
+          variant={mapView === 'standard' ? 'default' : 'secondary'}
           size="sm"
-          className={`transition-all duration-300 ${
+          className={`glass-button ${
             mapView === 'standard' 
-              ? 'bg-gradient-primary text-white shadow-md' 
-              : 'text-foreground/70 hover:text-foreground hover:bg-white/10'
+              ? 'bg-gradient-primary text-white' 
+              : 'bg-white/20 text-foreground hover:bg-white/30'
           }`}
         >
-          <Map className="w-4 h-4 mr-1.5" />
+          <Map className="w-4 h-4 mr-2" />
           Standard
         </Button>
         <Button
           onClick={() => setMapView('satellite')}
-          variant={mapView === 'satellite' ? 'default' : 'ghost'}
+          variant={mapView === 'satellite' ? 'default' : 'secondary'}
           size="sm"
-          className={`transition-all duration-300 ${
+          className={`glass-button ${
             mapView === 'satellite' 
-              ? 'bg-gradient-primary text-white shadow-md' 
-              : 'text-foreground/70 hover:text-foreground hover:bg-white/10'
+              ? 'bg-gradient-primary text-white' 
+              : 'bg-white/20 text-foreground hover:bg-white/30'
           }`}
         >
-          <Satellite className="w-4 h-4 mr-1.5" />
+          <Satellite className="w-4 h-4 mr-2" />
           Satellite
         </Button>
       </motion.div>
