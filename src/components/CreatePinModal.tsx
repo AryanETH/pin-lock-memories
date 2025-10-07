@@ -1,14 +1,15 @@
 import { useState, ChangeEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Upload, Lock, FileIcon, Image, Video, Music, FileText } from 'lucide-react';
+import { X, Upload, Lock, FileIcon, Image, Video, Music, FileText, Globe, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { hashPin } from '@/lib/crypto';
 import { processFile, getFileType, ALL_ACCEPTED_TYPES } from '@/lib/files';
-import { Pin, MemoryFile } from '@/lib/db';
+import { Pin, MemoryFile, getOrCreateDeviceId } from '@/lib/db';
 import { toast } from 'sonner';
+import { Switch } from '@/components/ui/switch';
 
 interface CreatePinModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ interface CreatePinModalProps {
   lat: number;
   lng: number;
   onSave: (pin: Pin) => void;
+  presetPinHash?: string; // when re-tapping, use existing PIN
 }
 
 const FILE_ICONS = {
@@ -25,11 +27,13 @@ const FILE_ICONS = {
   document: FileText,
 };
 
-export default function CreatePinModal({ isOpen, onClose, lat, lng, onSave }: CreatePinModalProps) {
+export default function CreatePinModal({ isOpen, onClose, lat, lng, onSave, presetPinHash }: CreatePinModalProps) {
   const [pin, setPin] = useState('');
+  const [name, setName] = useState('');
   const [files, setFiles] = useState<MemoryFile[]>([]);
   const [loading, setLoading] = useState(false);
   const [radius, setRadius] = useState<number>(100); // Default 100m
+  const [isPublic, setIsPublic] = useState<boolean>(false);
 
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = e.target.files;
@@ -61,9 +65,11 @@ export default function CreatePinModal({ isOpen, onClose, lat, lng, onSave }: Cr
   };
 
   const handleSubmit = async () => {
-    if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
-      toast.error('PIN must be exactly 4 digits');
-      return;
+    if (!presetPinHash) {
+      if (pin.length < 4 || pin.length > 8 || !/^\d{4,8}$/.test(pin)) {
+        toast.error('PIN must be 4–8 digits');
+        return;
+      }
     }
 
     if (files.length === 0) {
@@ -71,16 +77,27 @@ export default function CreatePinModal({ isOpen, onClose, lat, lng, onSave }: Cr
       return;
     }
 
+    if (name.trim().length === 0) {
+      toast.error('Please enter a memory name');
+      return;
+    }
+
     setLoading(true);
     try {
-      const pinHash = await hashPin(pin);
+      const pinHash = presetPinHash ? presetPinHash : await hashPin(pin);
+      const now = Date.now();
       const newPin: Pin = {
         id: crypto.randomUUID(),
         lat,
         lng,
+        name: name.trim(),
         pinHash,
+        isPublic,
+        shareToken: null,
+        ownerUserId: getOrCreateDeviceId(),
         files,
-        createdAt: Date.now(),
+        createdAt: now,
+        updatedAt: now,
         radius: radius,
       };
 
@@ -144,19 +161,49 @@ export default function CreatePinModal({ isOpen, onClose, lat, lng, onSave }: Cr
 
             <div className="space-y-4">
               <div>
-                <Label htmlFor="pin" className="text-sm font-medium">
-                  Set 4-digit PIN
-                </Label>
+                <Label htmlFor="name" className="text-sm font-medium">Memory name</Label>
                 <Input
-                  id="pin"
-                  type="password"
-                  inputMode="numeric"
-                  maxLength={4}
-                  value={pin}
-                  onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-                  placeholder="••••"
-                  className="mt-1.5 text-center text-2xl tracking-widest"
+                  id="name"
+                  type="text"
+                  maxLength={60}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g., Sunset at Ocean Beach"
+                  className="mt-1.5"
                 />
+              </div>
+
+              {!presetPinHash ? (
+                <div>
+                  <Label htmlFor="pin" className="text-sm font-medium">
+                    Set 4–8-digit PIN
+                  </Label>
+                  <Input
+                    id="pin"
+                    type="password"
+                    inputMode="numeric"
+                    maxLength={8}
+                    value={pin}
+                    onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+                    placeholder="••••"
+                    className="mt-1.5 text-center text-2xl tracking-widest"
+                  />
+                </div>
+              ) : (
+                <div className="text-sm text-muted-foreground">
+                  Using existing PIN for this location
+                </div>
+              )}
+
+              <div className="flex items-center justify-between rounded-xl bg-muted/40 p-3">
+                <div className="flex items-center gap-3">
+                  {isPublic ? <Globe className="w-5 h-5 text-primary" /> : <Shield className="w-5 h-5 text-muted-foreground" />}
+                  <div>
+                    <p className="text-sm font-medium">Make memory public</p>
+                    <p className="text-xs text-muted-foreground">Accessible to anyone on this spot with PIN</p>
+                  </div>
+                </div>
+                <Switch checked={isPublic} onCheckedChange={setIsPublic} />
               </div>
 
               <div>
