@@ -5,10 +5,12 @@ import SimpleMap from '@/components/SimpleMap';
 import CreatePinModal from '@/components/CreatePinModal';
 import UnlockPinModal from '@/components/UnlockPinModal';
 import FileViewer from '@/components/FileViewer';
+import MemoryOptionsModal from '@/components/MemoryOptionsModal';
+import ShareModal from '@/components/ShareModal';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Pin, savePin, getAllPins } from '@/lib/db';
-import { getCurrentPosition } from '@/lib/geo';
+import { Pin, savePin, getAllPins, getPinById } from '@/lib/db';
+import { getCurrentPosition, calculateDistance } from '@/lib/geo';
 import { toast } from 'sonner';
 
 export default function Index() {
@@ -18,13 +20,33 @@ export default function Index() {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [unlockModalOpen, setUnlockModalOpen] = useState(false);
   const [galleryOpen, setGalleryOpen] = useState(false);
+  const [memoryOptionsOpen, setMemoryOptionsOpen] = useState(false);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
   const [selectedPin, setSelectedPin] = useState<Pin | null>(null);
   const [pendingLocation, setPendingLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   useEffect(() => {
     loadPins();
     getUserLocation();
+    checkSharedMemory();
   }, []);
+
+  const checkSharedMemory = async () => {
+    const path = window.location.pathname;
+    const match = path.match(/^\/memory\/(.+)$/);
+    if (match) {
+      const shareToken = match[1];
+      const allPins = await getAllPins();
+      const sharedPin = allPins.find(p => p.shareToken === shareToken);
+      if (sharedPin) {
+        setSelectedPin(sharedPin);
+        setGalleryOpen(true);
+        toast.success('Shared memory loaded!');
+      } else {
+        toast.error('Shared memory not found');
+      }
+    }
+  };
 
   const loadPins = async () => {
     try {
@@ -50,9 +72,8 @@ export default function Index() {
   };
 
   const handlePinClick = (pin: Pin) => {
-    // Tap-based unlock - no location check needed
     setSelectedPin(pin);
-    setUnlockModalOpen(true);
+    setMemoryOptionsOpen(true);
   };
 
   const handleSavePin = async (pin: Pin) => {
@@ -66,7 +87,23 @@ export default function Index() {
 
   const handleUnlock = (pin: Pin) => {
     setSelectedPin(pin);
+    setMemoryOptionsOpen(false);
     setGalleryOpen(true);
+  };
+
+  const handleViewMemory = () => {
+    setMemoryOptionsOpen(false);
+    setUnlockModalOpen(true);
+  };
+
+  const handleLockNewMemory = () => {
+    setMemoryOptionsOpen(false);
+    setCreateModalOpen(true);
+  };
+
+  const handleShareMemory = () => {
+    setMemoryOptionsOpen(false);
+    setShareModalOpen(true);
   };
 
   return (
@@ -76,7 +113,7 @@ export default function Index() {
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ type: 'spring', damping: 20 }}
-        className="absolute top-0 left-0 right-0 z-10 p-4"
+        className="absolute top-0 left-0 right-0 z-10 p-4 pb-0"
       >
         <div className="glass-card px-6 py-3 flex items-center justify-between">
           <motion.div
@@ -117,6 +154,16 @@ export default function Index() {
       </div>
 
       {/* Modals */}
+      <MemoryOptionsModal
+        isOpen={memoryOptionsOpen}
+        onClose={() => setMemoryOptionsOpen(false)}
+        existingPin={selectedPin!}
+        onViewMemory={handleViewMemory}
+        onLockMemory={handleLockNewMemory}
+        onShare={handleShareMemory}
+        isOwner={true}
+      />
+
       <CreatePinModal
         isOpen={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
@@ -130,6 +177,12 @@ export default function Index() {
         onClose={() => setUnlockModalOpen(false)}
         pin={selectedPin}
         onUnlock={handleUnlock}
+      />
+
+      <ShareModal
+        isOpen={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        pin={selectedPin!}
       />
 
       <FileViewer

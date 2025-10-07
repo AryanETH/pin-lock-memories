@@ -17,6 +17,9 @@ export interface Pin {
   files: MemoryFile[];
   createdAt: number;
   radius: number; // in meters (100-1000)
+  name: string; // memory name
+  isPublic: boolean; // public or private
+  shareToken: string | null; // for shareable links
 }
 
 interface GeoVaultDB extends DBSchema {

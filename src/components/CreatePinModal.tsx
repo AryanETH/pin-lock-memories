@@ -30,6 +30,8 @@ export default function CreatePinModal({ isOpen, onClose, lat, lng, onSave }: Cr
   const [files, setFiles] = useState<MemoryFile[]>([]);
   const [loading, setLoading] = useState(false);
   const [radius, setRadius] = useState<number>(100); // Default 100m
+  const [memoryName, setMemoryName] = useState('');
+  const [isPublic, setIsPublic] = useState(false);
 
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = e.target.files;
@@ -66,6 +68,11 @@ export default function CreatePinModal({ isOpen, onClose, lat, lng, onSave }: Cr
       return;
     }
 
+    if (!memoryName.trim()) {
+      toast.error('Please enter a memory name');
+      return;
+    }
+
     if (files.length === 0) {
       toast.error('Please upload at least one file');
       return;
@@ -82,6 +89,9 @@ export default function CreatePinModal({ isOpen, onClose, lat, lng, onSave }: Cr
         files,
         createdAt: Date.now(),
         radius: radius,
+        name: memoryName.trim(),
+        isPublic: isPublic,
+        shareToken: null,
       };
 
       await onSave(newPin);
@@ -98,6 +108,8 @@ export default function CreatePinModal({ isOpen, onClose, lat, lng, onSave }: Cr
     setPin('');
     setFiles([]);
     setRadius(100);
+    setMemoryName('');
+    setIsPublic(false);
     onClose();
   };
 
@@ -144,6 +156,21 @@ export default function CreatePinModal({ isOpen, onClose, lat, lng, onSave }: Cr
 
             <div className="space-y-4">
               <div>
+                <Label htmlFor="memoryName" className="text-sm font-medium">
+                  Memory Name
+                </Label>
+                <Input
+                  id="memoryName"
+                  type="text"
+                  value={memoryName}
+                  onChange={(e) => setMemoryName(e.target.value)}
+                  placeholder="Give your memory a name..."
+                  className="mt-1.5"
+                  maxLength={50}
+                />
+              </div>
+
+              <div>
                 <Label htmlFor="pin" className="text-sm font-medium">
                   Set 4-digit PIN
                 </Label>
@@ -157,6 +184,9 @@ export default function CreatePinModal({ isOpen, onClose, lat, lng, onSave }: Cr
                   placeholder="••••"
                   className="mt-1.5 text-center text-2xl tracking-widest"
                 />
+                <p className="text-xs text-muted-foreground mt-1.5">
+                  Set a 4-digit PIN to protect your memory. Choose whether to keep it private or make it public.
+                </p>
               </div>
 
               <div>
@@ -178,6 +208,27 @@ export default function CreatePinModal({ isOpen, onClose, lat, lng, onSave }: Cr
                     <span>1km</span>
                   </div>
                 </div>
+              </div>
+
+              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border">
+                <div className="flex-1">
+                  <Label htmlFor="isPublic" className="text-sm font-medium cursor-pointer">
+                    Make memory public
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {isPublic ? '🌐 Accessible to anyone with PIN' : '🔒 Only you can view'}
+                  </p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    id="isPublic"
+                    type="checkbox"
+                    checked={isPublic}
+                    onChange={(e) => setIsPublic(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-primary"></div>
+                </label>
               </div>
 
               <div>
@@ -231,7 +282,7 @@ export default function CreatePinModal({ isOpen, onClose, lat, lng, onSave }: Cr
 
               <Button
                 onClick={handleSubmit}
-                disabled={loading || pin.length !== 4 || files.length === 0}
+                disabled={loading || pin.length !== 4 || files.length === 0 || !memoryName.trim()}
                 className="w-full bg-gradient-primary hover:opacity-90 transition-opacity text-white font-semibold"
                 size="lg"
               >
