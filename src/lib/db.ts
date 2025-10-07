@@ -16,6 +16,7 @@ export interface Pin {
   pinHash: string;
   files: MemoryFile[];
   createdAt: number;
+  radius: number; // in meters (100-1000)
 }
 
 interface GeoVaultDB extends DBSchema {

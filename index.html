@@ -7,6 +7,38 @@
     <meta name="description" content="Securely lock your photos to real-world locations with PIN protection. Unlock memories when you return." />
     <meta name="author" content="GeoVault" />
     <meta name="theme-color" content="#7c3aed" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GeoVault">
+
+    <script type="application/json" id="manifest">
+    {
+      "name": "GeoVault",
+      "short_name": "GeoVault",
+      "description": "Securely lock your photos to real-world locations with PIN protection. Unlock memories when you return.",
+      "start_url": "/",
+      "display": "standalone",
+      "background_color": "#ffffff",
+      "theme_color": "#7c3aed",
+      "orientation": "any",
+      "scope": "/",
+      "icons": [
+        {
+          "src": "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/3c091969-fa90-46b1-bc92-7b82e11067b9/id-preview-76993a35--797a9d25-e383-438f-8223-5289ad81dad9.lovable.app-1759786352377.png",
+          "sizes": "512x512",
+          "type": "image/png",
+          "purpose": "any maskable"
+        },
+        {
+          "src": "https://pin-lock-memories.lovable.app/favicon.ico",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+    </script>
+
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIkdlb1ZhdWx0IiwKICAic2hvcnRfbmFtZSI6ICJHZW9WYXVsdCIsCiAgImRlc2NyaXB0aW9uIjogIlNlY3VyZWx5IGxvY2sgeW91ciBwaG90b3MgdG8gcmVhbC13b3JsZCBsb2NhdGlvbnMgd2l0aCBQSU4gcHJvdGVjdGlvbi4gVW5sb2NrIG1lbW9yaWVzIHdoZW4geW91IHJldHVybi4iLAogICJzdGFydF91cmwiOiAiLyIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiI2ZmZmZmZiIsCiAgInRoZW1lX2NvbG9yIjogIiM3YzNhZWQiLAogICJvcmllbnRhdGlvbiI6ICJhbnkiLAogICJzY29wZSI6ICIvIiwKICAiaWNvbnMiOiBbCiAgICB7CiAgICAgICJzcmMiOiAiaHR0cHM6Ly9wdWItYmIyZTEwM2EzMmRiNGUxOTg1MjRhMmU5ZWQ4ZjM1YjQucjIuZGV2LzNjMDkxOTY5LWZhOTAtNDZiMS1iYzkyLTdiODJlMTEwNjdiOS9pZC1wcmV2aWV3LTc2OTkzYTM1LS03OTdhOWQyNS1lMzgzLTQzOGYtODIyMy01Mjg5YWQ4MWRhZDkubG92YWJsZS5hcHAtMTc1OTc4NjM1MjM3Ny5wbmciLAogICAgICAic2l6ZXMiOiAiNTEyeDUxMiIsCiAgICAgICJ0eXBlIjogImltYWdlL3BuZyIsCiAgICAgICJwdXJwb3NlIjogImFueSBtYXNrYWJsZSIKICAgIH0sCiAgICB7CiAgICAgICJzcmMiOiAiaHR0cHM6Ly9waW4tbG9jay1tZW1vcmllcy5sb3ZhYmxlLmFwcC9mYXZpY29uLmljbyIsCiAgICAgICJzaXplcyI6ICIxOTJ4MTkyIiwKICAgICAgInR5cGUiOiAiaW1hZ2UvcG5nIgogICAgfQogIF0KfQ==">
 
     <meta property="og:title" content="GeoVault - Lock Your Memories to Places" />
     <meta property="og:description" content="Securely lock your photos to real-world locations with PIN protection" />
@@ -27,5 +59,12 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then(() => console.log('Service Worker registered'))
+          .catch(err => console.log('Service Worker registration failed', err));
+      }
+    </script>
   </body>
 </html>

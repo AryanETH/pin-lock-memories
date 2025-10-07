@@ -4,6 +4,7 @@ import { X, Upload, Lock, FileIcon, Image, Video, Music, FileText } from 'lucide
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
 import { hashPin } from '@/lib/crypto';
 import { processFile, getFileType, ALL_ACCEPTED_TYPES } from '@/lib/files';
 import { Pin, MemoryFile } from '@/lib/db';
@@ -28,6 +29,7 @@ export default function CreatePinModal({ isOpen, onClose, lat, lng, onSave }: Cr
   const [pin, setPin] = useState('');
   const [files, setFiles] = useState<MemoryFile[]>([]);
   const [loading, setLoading] = useState(false);
+  const [radius, setRadius] = useState<number>(100); // Default 100m
 
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = e.target.files;
@@ -79,6 +81,7 @@ export default function CreatePinModal({ isOpen, onClose, lat, lng, onSave }: Cr
         pinHash,
         files,
         createdAt: Date.now(),
+        radius: radius,
       };
 
       await onSave(newPin);
@@ -94,6 +97,7 @@ export default function CreatePinModal({ isOpen, onClose, lat, lng, onSave }: Cr
   const handleClose = () => {
     setPin('');
     setFiles([]);
+    setRadius(100);
     onClose();
   };
 
@@ -153,6 +157,27 @@ export default function CreatePinModal({ isOpen, onClose, lat, lng, onSave }: Cr
                   placeholder="••••"
                   className="mt-1.5 text-center text-2xl tracking-widest"
                 />
+              </div>
+
+              <div>
+                <Label htmlFor="radius" className="text-sm font-medium">
+                  Discovery Radius: {radius}m
+                </Label>
+                <div className="mt-3">
+                  <Slider
+                    id="radius"
+                    min={100}
+                    max={1000}
+                    step={50}
+                    value={[radius]}
+                    onValueChange={(values) => setRadius(values[0])}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between mt-2 text-xs text-muted-foreground">
+                    <span>100m</span>
+                    <span>1km</span>
+                  </div>
+                </div>
               </div>
 
               <div>
