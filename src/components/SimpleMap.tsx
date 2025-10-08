@@ -4,7 +4,8 @@ import 'leaflet/dist/leaflet.css';
 import { motion } from 'framer-motion';
 import { Pin } from '@/lib/db';
 import { Button } from '@/components/ui/button';
-import { Map, Satellite, Share2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Map, Satellite, Share2, Search } from 'lucide-react';
 
 // Fix default icon
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -28,6 +29,8 @@ export default function SimpleMap({ pins, onMapClick, onPinClick, userLocation, 
   const containerRef = useRef<HTMLDivElement>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   const [mapView, setMapView] = useState<'standard' | 'satellite'>('standard');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -279,6 +282,40 @@ export default function SimpleMap({ pins, onMapClick, onPinClick, userLocation, 
     }
   };
 
+  const handleSearch = async () => {
+    if (!searchQuery.trim() || !mapRef.current) return;
+    
+    setIsSearching(true);
+    try {
+      // Use Nominatim (OpenStreetMap) geocoding service
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`
+      );
+      const data = await response.json();
+      
+      if (data && data.length > 0) {
+        const result = data[0];
+        const lat = parseFloat(result.lat);
+        const lng = parseFloat(result.lon);
+        
+        // Pan and zoom to the location
+        mapRef.current.setView([lat, lng], 15, {
+          animate: true,
+          duration: 1
+        });
+        
+        setSearchQuery('');
+      } else {
+        alert('Location not found. Try a different search term.');
+      }
+    } catch (error) {
+      console.error('Search error:', error);
+      alert('Failed to search location. Please try again.');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -286,6 +323,35 @@ export default function SimpleMap({ pins, onMapClick, onPinClick, userLocation, 
       transition={{ duration: 0.5 }}
       className="relative h-full w-full"
     >
+      {/* Search Bar */}
+      <motion.div
+        initial={{ y: -50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.2, type: 'spring', damping: 20 }}
+        className="absolute top-3 left-1/2 -translate-x-1/2 z-[1000] w-full max-w-md px-4"
+      >
+        <div className="glass-card p-2 flex items-center gap-2">
+          <Search className="w-5 h-5 text-muted-foreground ml-2" />
+          <Input
+            type="text"
+            placeholder="Search for a place..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+            disabled={isSearching}
+          />
+          <Button
+            onClick={handleSearch}
+            disabled={!searchQuery.trim() || isSearching}
+            size="sm"
+            className="bg-gradient-primary text-white"
+          >
+            {isSearching ? 'Searching...' : 'Go'}
+          </Button>
+        </div>
+      </motion.div>
+
       {/* Map Container with spacing from header */}
       <div className="map-container w-full h-full md:h-full aspect-[3/4] md:aspect-auto rounded-3xl overflow-hidden shadow-elevated mt-[14px] mb-[14px]">
         <div ref={containerRef} className="h-full w-full" />
@@ -296,22 +362,22 @@ export default function SimpleMap({ pins, onMapClick, onPinClick, userLocation, 
         initial={{ y: 50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3, type: 'spring', damping: 20 }}
-        className="map-controls absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2 md:gap-3 z-[1000] backdrop-blur-xl bg-white/15 dark:bg-black/20 rounded-[25px] px-3 md:px-4 py-1.5 shadow-[0_4px_10px_rgba(0,0,0,0.2)]"
+        className="map-controls absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2 md:gap-3 z-[1000] backdrop-blur-xl bg-white/15 dark:bg-black/20 rounded-[25px] px-3 md:px-4 py-1.5 shadow-[0_4px_10px_rgba(0,0,0,0.2)] border border-white/20"
       >
         <Button
           onClick={() => setMapView('standard')}
-          variant={mapView === 'standard' ? 'default' : 'secondary'}
+          variant="ghost"
           size="sm"
-          className={`${mapView === 'standard' ? 'bg-gradient-primary text-white' : 'bg-white/20 text-foreground hover:bg-white/30'}`}
+          className={`transition-all ${mapView === 'standard' ? 'bg-gradient-primary text-white' : 'text-foreground/70 hover:bg-white/10'}`}
         >
           <Map className="w-4 h-4 mr-2" />
           Standard
         </Button>
          <Button
            onClick={() => setMapView('satellite')}
-           variant={mapView === 'satellite' ? 'default' : 'secondary'}
+           variant="ghost"
            size="sm"
-           className={`${mapView === 'satellite' ? 'bg-gradient-primary text-white' : 'bg-white/20 text-foreground hover:bg-white/30'}`}
+           className={`transition-all ${mapView === 'satellite' ? 'bg-gradient-primary text-white' : 'text-foreground/70 hover:bg-white/10'}`}
          >
            <Satellite className="w-4 h-4 mr-2" />
            Satellite
@@ -319,9 +385,9 @@ export default function SimpleMap({ pins, onMapClick, onPinClick, userLocation, 
          {onShareLocation && (
            <Button
              onClick={handleShareCurrentView}
-             variant="secondary"
+             variant="ghost"
              size="sm"
-             className="bg-white/20 text-foreground hover:bg-white/30"
+             className="text-foreground/70 hover:bg-white/10 transition-all"
            >
              <Share2 className="w-4 h-4 mr-2" />
              Share
