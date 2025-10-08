@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Moon, Sun, Eye, Lock, Share2, Globe, Shield, Map } from 'lucide-react';
 import SimpleMap from '@/components/SimpleMap';
 import CreatePinModal from '@/components/CreatePinModal';
 import UnlockPinModal from '@/components/UnlockPinModal';
 import FileViewer from '@/components/FileViewer';
+import SearchBar from '@/components/SearchBar';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -12,6 +13,7 @@ import { Pin, savePin, getAllPins, updatePin, getPinByShareToken, logAccess, get
 import { calculateDistance } from '@/lib/geo';
 import { getCurrentPosition } from '@/lib/geo';
 import { toast } from 'sonner';
+import { Map as LeafletMap } from 'leaflet';
 
 export default function Index() {
   const { theme, toggleTheme } = useTheme();
@@ -27,6 +29,7 @@ export default function Index() {
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [locationShareModalOpen, setLocationShareModalOpen] = useState(false);
   const [sharedLocation, setSharedLocation] = useState<{ lat: number; lng: number; zoom: number; pinId?: string } | null>(null);
+  const mapRef = useRef<LeafletMap | null>(null);
 
   useEffect(() => {
     loadPins();
@@ -156,6 +159,12 @@ export default function Index() {
     return `${baseUrl}?${params.toString()}`;
   };
 
+  const handleSearchSelect = (lat: number, lng: number) => {
+    if (mapRef.current) {
+      mapRef.current.setView([lat, lng], 15);
+    }
+  };
+
   return (
     <div className="relative h-screen w-full overflow-hidden bg-gradient-to-br from-background via-background to-primary/5">
       {/* Header Bar */}
@@ -165,18 +174,27 @@ export default function Index() {
         transition={{ type: 'spring', damping: 20 }}
         className="absolute top-0 left-0 right-0 z-10 p-4"
       >
-        <div className="glass-card px-6 py-3 flex items-center justify-between">
+        <div className="glass-card px-6 py-3 flex items-center justify-between gap-4">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 flex-shrink-0"
           >
             <MapPin className="w-6 h-6 text-primary" />
             <h1 className="text-2xl font-bold text-gradient">GeoVault</h1>
           </motion.div>
 
-          <div className="flex items-center gap-2">
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="flex-1 max-w-sm mx-4"
+          >
+            <SearchBar onSelectLocation={handleSearchSelect} />
+          </motion.div>
+
+          <div className="flex items-center gap-2 flex-shrink-0">
             <Button
               variant="ghost"
               size="icon"
@@ -201,6 +219,7 @@ export default function Index() {
           onPinClick={handlePinClick}
           userLocation={userLocation}
           onShareLocation={handleShareLocation}
+          onMapReady={(map) => { mapRef.current = map; }}
         />
       </div>
 

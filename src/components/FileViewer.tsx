@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Download, Share2 } from 'lucide-react';
 import { MemoryFile } from '@/lib/db';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 interface FileViewerProps {
   isOpen: boolean;
@@ -27,6 +28,13 @@ export default function FileViewer({ isOpen, onClose, files }: FileViewerProps) 
     link.href = file.data;
     link.download = file.name;
     link.click();
+  };
+
+  const handleShare = () => {
+    const file = files[currentIndex];
+    // Generate a shareable link by copying the data URL
+    navigator.clipboard.writeText(file.data);
+    toast.success('Image link copied to clipboard! Anyone can access it.');
   };
 
   const renderFile = (file: MemoryFile) => {
@@ -96,8 +104,15 @@ export default function FileViewer({ isOpen, onClose, files }: FileViewerProps) 
           </button>
 
           <button
-            onClick={handleDownload}
+            onClick={handleShare}
             className="absolute top-4 right-16 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"
+          >
+            <Share2 className="w-6 h-6 text-white" />
+          </button>
+
+          <button
+            onClick={handleDownload}
+            className="absolute top-4 right-28 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"
           >
             <Download className="w-6 h-6 text-white" />
           </button>

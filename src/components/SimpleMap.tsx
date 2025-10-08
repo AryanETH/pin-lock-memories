@@ -4,8 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import { motion } from 'framer-motion';
 import { Pin } from '@/lib/db';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Map, Satellite, Share2, Search } from 'lucide-react';
+import { Map, Satellite, Share2 } from 'lucide-react';
 
 // Fix default icon
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -21,16 +20,15 @@ interface SimpleMapProps {
   onPinClick: (pin: Pin) => void;
   userLocation: [number, number] | null;
   onShareLocation?: (lat: number, lng: number, zoom: number, pinId?: string) => void;
+  onMapReady?: (map: L.Map) => void;
 }
 
-export default function SimpleMap({ pins, onMapClick, onPinClick, userLocation, onShareLocation }: SimpleMapProps) {
+export default function SimpleMap({ pins, onMapClick, onPinClick, userLocation, onShareLocation, onMapReady }: SimpleMapProps) {
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<{ [key: string]: L.Marker }>({});
   const containerRef = useRef<HTMLDivElement>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   const [mapView, setMapView] = useState<'standard' | 'satellite'>('standard');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -63,6 +61,11 @@ export default function SimpleMap({ pins, onMapClick, onPinClick, userLocation, 
 
     tileLayerRef.current = standardLayer;
     mapRef.current = map;
+
+    // Notify parent that map is ready
+    if (onMapReady) {
+      onMapReady(map);
+    }
 
     return () => {
       map.remove();
@@ -282,40 +285,6 @@ export default function SimpleMap({ pins, onMapClick, onPinClick, userLocation, 
     }
   };
 
-  const handleSearch = async () => {
-    if (!searchQuery.trim() || !mapRef.current) return;
-    
-    setIsSearching(true);
-    try {
-      // Use Nominatim (OpenStreetMap) geocoding service
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`
-      );
-      const data = await response.json();
-      
-      if (data && data.length > 0) {
-        const result = data[0];
-        const lat = parseFloat(result.lat);
-        const lng = parseFloat(result.lon);
-        
-        // Pan and zoom to the location
-        mapRef.current.setView([lat, lng], 15, {
-          animate: true,
-          duration: 1
-        });
-        
-        setSearchQuery('');
-      } else {
-        alert('Location not found. Try a different search term.');
-      }
-    } catch (error) {
-      console.error('Search error:', error);
-      alert('Failed to search location. Please try again.');
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -323,35 +292,6 @@ export default function SimpleMap({ pins, onMapClick, onPinClick, userLocation, 
       transition={{ duration: 0.5 }}
       className="relative h-full w-full"
     >
-      {/* Search Bar */}
-      <motion.div
-        initial={{ y: -50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2, type: 'spring', damping: 20 }}
-        className="absolute top-3 left-1/2 -translate-x-1/2 z-[1000] w-full max-w-md px-4"
-      >
-        <div className="glass-card p-2 flex items-center gap-2">
-          <Search className="w-5 h-5 text-muted-foreground ml-2" />
-          <Input
-            type="text"
-            placeholder="Search for a place..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-            disabled={isSearching}
-          />
-          <Button
-            onClick={handleSearch}
-            disabled={!searchQuery.trim() || isSearching}
-            size="sm"
-            className="bg-gradient-primary text-white"
-          >
-            {isSearching ? 'Searching...' : 'Go'}
-          </Button>
-        </div>
-      </motion.div>
-
       {/* Map Container with spacing from header */}
       <div className="map-container w-full h-full md:h-full aspect-[3/4] md:aspect-auto rounded-3xl overflow-hidden shadow-elevated mt-[14px] mb-[14px]">
         <div ref={containerRef} className="h-full w-full" />
