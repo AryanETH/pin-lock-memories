@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Moon, Sun, Eye, Lock, Share2, Globe, Shield, Map } from 'lucide-react';
 import SimpleMap from '@/components/SimpleMap';
+import mapxLogo from '@/assets/mapx-logo.png';
 import CreatePinModal from '@/components/CreatePinModal';
 import UnlockPinModal from '@/components/UnlockPinModal';
 import FileViewer from '@/components/FileViewer';
@@ -181,8 +182,12 @@ export default function Index() {
             transition={{ delay: 0.2 }}
             className="flex items-center gap-2 flex-shrink-0"
           >
-            <MapPin className="w-6 h-6 text-primary" />
-            <h1 className="text-2xl font-bold text-gradient">GeoVault</h1>
+            <img 
+              src={mapxLogo} 
+              alt="Mapx Logo" 
+              className="w-8 h-8 object-contain dark:invert" 
+            />
+            <h1 className="text-2xl font-bold text-gradient">Mapx</h1>
           </motion.div>
 
           <motion.div
@@ -226,7 +231,11 @@ export default function Index() {
       {/* Modals */}
       <CreatePinModal
         isOpen={createModalOpen}
-        onClose={() => setCreateModalOpen(false)}
+        onClose={() => {
+          setCreateModalOpen(false);
+          setRetapTargetPin(null);
+          setPendingLocation(null);
+        }}
         lat={pendingLocation?.lat || 0}
         lng={pendingLocation?.lng || 0}
         onSave={handleSavePin}
@@ -235,7 +244,10 @@ export default function Index() {
 
       <UnlockPinModal
         isOpen={unlockModalOpen}
-        onClose={() => setUnlockModalOpen(false)}
+        onClose={() => {
+          setUnlockModalOpen(false);
+          setRetapModalOpen(false);
+        }}
         pin={selectedPin}
         onUnlock={handleUnlock}
       />
