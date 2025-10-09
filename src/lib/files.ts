@@ -1,3 +1,43 @@
+import { supabase } from '@/integrations/supabase/client';
+import { MemoryFile } from './db';
+
+export async function uploadFileToStorage(
+  file: File,
+  pinId: string
+): Promise<{ storagePath: string; publicUrl: string }> {
+  // Check file size (50MB limit from database)
+  const maxSize = 50 * 1024 * 1024;
+  if (file.size > maxSize) {
+    throw new Error(`File size exceeds ${maxSize / 1024 / 1024}MB limit`);
+  }
+
+  // Create unique filename
+  const timestamp = Date.now();
+  const randomStr = Math.random().toString(36).substring(2, 15);
+  const ext = file.name.split('.').pop();
+  const storagePath = `${pinId}/${timestamp}-${randomStr}.${ext}`;
+
+  // Upload to Supabase Storage
+  const { error: uploadError } = await supabase.storage
+    .from('memory-files')
+    .upload(storagePath, file, {
+      cacheControl: '3600',
+      upsert: false,
+    });
+
+  if (uploadError) throw uploadError;
+
+  // Get public URL
+  const { data } = supabase.storage
+    .from('memory-files')
+    .getPublicUrl(storagePath);
+
+  return {
+    storagePath,
+    publicUrl: data.publicUrl,
+  };
+}
+
 export async function processFile(
   file: File,
   maxSize: number = 10 * 1024 * 1024 // 10MB default

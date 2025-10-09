@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { hashPin } from '@/lib/crypto';
-import { processFile, getFileType, ALL_ACCEPTED_TYPES } from '@/lib/files';
+import { uploadFileToStorage, getFileType, ALL_ACCEPTED_TYPES } from '@/lib/files';
 import { Pin, MemoryFile, getOrCreateDeviceId } from '@/lib/db';
 import { toast } from 'sonner';
 import { Switch } from '@/components/ui/switch';
@@ -39,29 +39,20 @@ export default function CreatePinModal({ isOpen, onClose, lat, lng, onSave, pres
     const selectedFiles = e.target.files;
     if (!selectedFiles) return;
 
-    setLoading(true);
-    try {
-      const newFiles: MemoryFile[] = [];
-      for (const file of Array.from(selectedFiles)) {
-        const processedData = await processFile(file);
-        const fileType = getFileType(file.type);
-        
-        newFiles.push({
-          id: crypto.randomUUID(),
-          data: processedData,
-          type: fileType,
-          mimeType: file.type,
-          name: file.name,
-          timestamp: Date.now(),
-        });
-      }
-      setFiles((prev) => [...prev, ...newFiles]);
-      toast.success(`Added ${newFiles.length} file(s)`);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to process files');
-    } finally {
-      setLoading(false);
-    }
+    // Just store files temporarily - we'll upload them when saving
+    const newFiles: MemoryFile[] = Array.from(selectedFiles).map(file => ({
+      id: crypto.randomUUID(),
+      url: '', // Will be set after upload
+      storagePath: '', // Will be set after upload
+      type: getFileType(file.type),
+      mimeType: file.type,
+      name: file.name,
+      timestamp: Date.now(),
+      _file: file, // Store original file temporarily
+    }));
+    
+    setFiles((prev) => [...prev, ...newFiles as any]);
+    toast.success(`Added ${newFiles.length} file(s)`);
   };
 
   const handleSubmit = async () => {
@@ -85,9 +76,28 @@ export default function CreatePinModal({ isOpen, onClose, lat, lng, onSave, pres
     setLoading(true);
     try {
       const pinHash = presetPinHash ? presetPinHash : await hashPin(pin);
+      const pinId = crypto.randomUUID();
       const now = Date.now();
+
+      // Upload all files to Supabase Storage
+      const uploadedFiles: MemoryFile[] = [];
+      for (const file of files) {
+        const originalFile = (file as any)._file as File;
+        const { storagePath, publicUrl } = await uploadFileToStorage(originalFile, pinId);
+        
+        uploadedFiles.push({
+          id: file.id,
+          url: publicUrl,
+          storagePath,
+          type: file.type,
+          mimeType: file.mimeType,
+          name: file.name,
+          timestamp: now,
+        });
+      }
+
       const newPin: Pin = {
-        id: crypto.randomUUID(),
+        id: pinId,
         lat,
         lng,
         name: name.trim(),
@@ -95,7 +105,7 @@ export default function CreatePinModal({ isOpen, onClose, lat, lng, onSave, pres
         isPublic,
         shareToken: null,
         ownerUserId: getOrCreateDeviceId(),
-        files,
+        files: uploadedFiles,
         createdAt: now,
         updatedAt: now,
         radius: radius,
@@ -105,7 +115,8 @@ export default function CreatePinModal({ isOpen, onClose, lat, lng, onSave, pres
       toast.success('Memory locked successfully! 🔒');
       handleClose();
     } catch (error) {
-      toast.error('Failed to save memory');
+      toast.error(error instanceof Error ? error.message : 'Failed to save memory');
+      console.error('Save error:', error);
     } finally {
       setLoading(false);
     }

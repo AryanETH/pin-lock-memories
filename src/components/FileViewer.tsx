@@ -25,15 +25,16 @@ export default function FileViewer({ isOpen, onClose, files }: FileViewerProps) 
   const handleDownload = () => {
     const file = files[currentIndex];
     const link = document.createElement('a');
-    link.href = file.data;
+    link.href = file.url;
     link.download = file.name;
+    link.target = '_blank';
     link.click();
   };
 
   const handleShare = () => {
     const file = files[currentIndex];
-    // Generate a shareable link by copying the data URL
-    navigator.clipboard.writeText(file.data);
+    // Copy the public URL to clipboard
+    navigator.clipboard.writeText(file.url);
     toast.success('Image link copied to clipboard! Anyone can access it.');
   };
 
@@ -42,7 +43,7 @@ export default function FileViewer({ isOpen, onClose, files }: FileViewerProps) 
       case 'image':
         return (
           <img
-            src={file.data}
+            src={file.url}
             alt={file.name}
             className="w-full h-auto max-h-[80vh] object-contain rounded-2xl"
           />
@@ -50,7 +51,7 @@ export default function FileViewer({ isOpen, onClose, files }: FileViewerProps) 
       case 'video':
         return (
           <video
-            src={file.data}
+            src={file.url}
             controls
             className="w-full h-auto max-h-[80vh] rounded-2xl"
           >
@@ -62,7 +63,7 @@ export default function FileViewer({ isOpen, onClose, files }: FileViewerProps) 
           <div className="flex flex-col items-center justify-center p-12 glass-card rounded-2xl">
             <div className="text-6xl mb-6">🎵</div>
             <p className="text-lg font-medium mb-6">{file.name}</p>
-            <audio src={file.data} controls className="w-full max-w-md">
+            <audio src={file.url} controls className="w-full max-w-md">
               Your browser does not support audio playback.
             </audio>
           </div>
