@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Moon, Sun, Eye, Lock, Share2, Globe, Shield, Map } from 'lucide-react';
+import { MapPin, Moon, Sun, Eye, Lock, Share2, Globe, Shield, Map as MapIcon } from 'lucide-react';
 import SimpleMap from '@/components/SimpleMap';
 import mapxLogo from '@/assets/mapx-logo.png';
 import CreatePinModal from '@/components/CreatePinModal';
@@ -31,7 +31,27 @@ export default function Index() {
   const [locationShareModalOpen, setLocationShareModalOpen] = useState(false);
   const [sharedLocation, setSharedLocation] = useState<{ lat: number; lng: number; zoom: number; pinId?: string } | null>(null);
   const mapRef = useRef<LeafletMap | null>(null);
-
+  
+  // Local private pins cache (for devices without auth)
+  const LOCAL_PINS_KEY = 'local-pins';
+  const loadLocalPins = (): Pin[] => {
+    try {
+      const raw = localStorage.getItem(LOCAL_PINS_KEY);
+      return raw ? (JSON.parse(raw) as Pin[]) : [];
+    } catch {
+      return [];
+    }
+  };
+  const saveLocalPins = (pinsToSave: Pin[]) => {
+    try {
+      localStorage.setItem(LOCAL_PINS_KEY, JSON.stringify(pinsToSave));
+    } catch {}
+  };
+  const mergePins = (a: Pin[], b: Pin[]) => {
+    const map = new Map<string, Pin>();
+    [...a, ...b].forEach(p => map.set(p.id, p));
+    return Array.from(map.values());
+  };
   useEffect(() => {
     loadPins();
     getUserLocation();
@@ -73,12 +93,11 @@ export default function Index() {
   const loadPins = async () => {
     try {
       const allPins = await getAllPins();
-      setPins(allPins);
+      setPins(mergePins(allPins, loadLocalPins()));
     } catch (error) {
       toast.error('Failed to load pins');
     }
   };
-
   const getUserLocation = async () => {
     try {
       const position = await getCurrentPosition();
@@ -109,12 +128,18 @@ export default function Index() {
   const handleSavePin = async (pin: Pin) => {
     try {
       await savePin(pin);
+      // Persist locally so this device can access private memories without auth
+      const locals = loadLocalPins();
+      const mergedLocals = mergePins(locals, [pin]);
+      saveLocalPins(mergedLocals);
+      // Update UI immediately
+      setPins(prev => mergePins(prev, [pin]));
+      // Also refresh from backend for other pins
       await loadPins();
     } catch (error) {
       toast.error('Failed to save pin');
     }
   };
-
   const handleUnlock = (pin: Pin) => {
     setSelectedPin(pin);
     setGalleryOpen(true);
@@ -332,7 +357,7 @@ export default function Index() {
            <motion.div initial={{ scale: 0.96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.96, opacity: 0 }} transition={{ type: 'spring', damping: 18 }} className="glass-card w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
              <div className="flex items-center gap-3 mb-4">
                <div className="p-3 rounded-full bg-gradient-primary">
-                 <Map className="w-6 h-6 text-white" />
+                 <MapIcon className="w-6 h-6 text-white" />
                </div>
                <div>
                  <h3 className="text-xl font-semibold">

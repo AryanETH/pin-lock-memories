@@ -4,7 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import { motion } from 'framer-motion';
 import { Pin } from '@/lib/db';
 import { Button } from '@/components/ui/button';
-import { Map, Satellite, Share2 } from 'lucide-react';
+import { Map, Satellite, Share2, LocateFixed } from 'lucide-react';
 
 // Fix default icon
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -28,6 +28,7 @@ export default function SimpleMap({ pins, onMapClick, onPinClick, userLocation, 
   const markersRef = useRef<{ [key: string]: L.Marker }>({});
   const containerRef = useRef<HTMLDivElement>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
+  const labelsLayerRef = useRef<L.TileLayer | null>(null);
   const [mapView, setMapView] = useState<'standard' | 'satellite'>('standard');
 
   useEffect(() => {
