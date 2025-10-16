@@ -135,8 +135,8 @@ export default function Index() {
       const mergedLocals = mergePins(locals, [pin]);
       saveLocalPins(mergedLocals);
       
-      // Reload all pins from backend and merge with local
-      await loadPins();
+      // Update state immediately with the new pin
+      setPins(prev => mergePins(prev, [pin]));
       
       toast.success('Memory saved successfully! 🔒');
     } catch (error) {
