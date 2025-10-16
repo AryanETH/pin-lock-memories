@@ -127,17 +127,21 @@ export default function Index() {
 
   const handleSavePin = async (pin: Pin) => {
     try {
+      // Save to Supabase
       await savePin(pin);
+      
       // Persist locally so this device can access private memories without auth
       const locals = loadLocalPins();
       const mergedLocals = mergePins(locals, [pin]);
       saveLocalPins(mergedLocals);
-      // Update UI immediately
-      setPins(prev => mergePins(prev, [pin]));
-      // Also refresh from backend for other pins
+      
+      // Reload all pins from backend and merge with local
       await loadPins();
+      
+      toast.success('Memory saved successfully! 🔒');
     } catch (error) {
       toast.error('Failed to save pin');
+      console.error('Save error:', error);
     }
   };
   const handleUnlock = (pin: Pin) => {

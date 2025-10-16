@@ -4,7 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import { motion } from 'framer-motion';
 import { Pin } from '@/lib/db';
 import { Button } from '@/components/ui/button';
-import { Map, Satellite, Share2, LocateFixed } from 'lucide-react';
+import { Map, Satellite, Share2, LocateFixed, Navigation } from 'lucide-react';
 
 // Fix default icon
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -87,8 +87,12 @@ export default function SimpleMap({ pins, onMapClick, onPinClick, userLocation, 
 
     const map = mapRef.current;
     
-    // Remove current tile layer
+    // Remove current tile layer and labels
     tileLayerRef.current.remove();
+    if (labelsLayerRef.current) {
+      labelsLayerRef.current.remove();
+      labelsLayerRef.current = null;
+    }
 
     // Add new tile layer based on view type
     if (mapView === 'satellite') {
@@ -96,6 +100,14 @@ export default function SimpleMap({ pins, onMapClick, onPinClick, userLocation, 
         'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
         {
           attribution: 'Tiles &copy; Esri',
+        }
+      ).addTo(map);
+      
+      // Add labels layer for satellite view
+      labelsLayerRef.current = L.tileLayer(
+        'https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}.png',
+        {
+          attribution: '&copy; CARTO',
         }
       ).addTo(map);
     } else {
@@ -286,6 +298,24 @@ export default function SimpleMap({ pins, onMapClick, onPinClick, userLocation, 
     }
   };
 
+  const handleLocateUser = () => {
+    if (!mapRef.current) return;
+    
+    if (userLocation) {
+      mapRef.current.setView(userLocation, 15, { animate: true });
+    } else {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const coords: [number, number] = [position.coords.latitude, position.coords.longitude];
+          mapRef.current?.setView(coords, 15, { animate: true });
+        },
+        () => {
+          alert('Unable to retrieve your location');
+        }
+      );
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -298,43 +328,47 @@ export default function SimpleMap({ pins, onMapClick, onPinClick, userLocation, 
         <div ref={containerRef} className="h-full w-full" />
       </div>
 
-      {/* Map View Toggle Buttons - center bottom, glass style */}
+      {/* Map Controls - bottom right, circular glass buttons */}
       <motion.div
-        initial={{ y: 50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.3, type: 'spring', damping: 20 }}
-        className="map-controls absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2 md:gap-3 z-[1000] backdrop-blur-xl bg-white/15 dark:bg-black/20 rounded-[25px] px-3 md:px-4 py-1.5 shadow-[0_4px_10px_rgba(0,0,0,0.2)] border border-white/20"
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.3 }}
+        className="absolute bottom-6 right-6 z-[1000] flex flex-col gap-2"
       >
         <Button
-          onClick={() => setMapView('standard')}
-          variant="ghost"
-          size="sm"
-          className={`transition-all ${mapView === 'standard' ? 'bg-gradient-primary text-white' : 'text-foreground/70 hover:bg-white/10'}`}
+          variant="secondary"
+          size="icon"
+          onClick={handleLocateUser}
+          className="rounded-full w-12 h-12 shadow-lg backdrop-blur-xl bg-white/80 dark:bg-black/40 hover:bg-white dark:hover:bg-black/60 border border-white/20"
+          title="My Location"
         >
-          <Map className="w-4 h-4 mr-2" />
-          Standard
+          <Navigation className="w-5 h-5" />
         </Button>
-         <Button
-           onClick={() => setMapView('satellite')}
-           variant="ghost"
-           size="sm"
-           className={`transition-all ${mapView === 'satellite' ? 'bg-gradient-primary text-white' : 'text-foreground/70 hover:bg-white/10'}`}
-         >
-           <Satellite className="w-4 h-4 mr-2" />
-           Satellite
-         </Button>
-         {onShareLocation && (
-           <Button
-             onClick={handleShareCurrentView}
-             variant="ghost"
-             size="sm"
-             className="text-foreground/70 hover:bg-white/10 transition-all"
-           >
-             <Share2 className="w-4 h-4 mr-2" />
-             Share
-           </Button>
-         )}
-       </motion.div>
+        <Button
+          variant="secondary"
+          size="icon"
+          onClick={() => setMapView(mapView === 'standard' ? 'satellite' : 'standard')}
+          className="rounded-full w-12 h-12 shadow-lg backdrop-blur-xl bg-white/80 dark:bg-black/40 hover:bg-white dark:hover:bg-black/60 border border-white/20"
+          title={mapView === 'standard' ? 'Satellite View' : 'Standard View'}
+        >
+          {mapView === 'standard' ? (
+            <Satellite className="w-5 h-5" />
+          ) : (
+            <Map className="w-5 h-5" />
+          )}
+        </Button>
+        {onShareLocation && (
+          <Button
+            variant="secondary"
+            size="icon"
+            onClick={handleShareCurrentView}
+            className="rounded-full w-12 h-12 shadow-lg backdrop-blur-xl bg-white/80 dark:bg-black/40 hover:bg-white dark:hover:bg-black/60 border border-white/20"
+            title="Share Location"
+          >
+            <Share2 className="w-5 h-5" />
+          </Button>
+        )}
+      </motion.div>
     </motion.div>
   );
 }
