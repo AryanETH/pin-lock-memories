@@ -149,72 +149,7 @@ export default function SimpleMap({ pins, onMapClick, onPinClick, userLocation, 
       }
     });
 
-    // Add pin markers with proper icons
-    pins.forEach((pin) => {
-      const isPublic = pin.isPublic;
-      const icon = L.divIcon({
-        html: `
-          <div class="pin-marker ${isPublic ? 'public' : 'private'}" style="
-            width: 32px;
-            height: 32px;
-            background: ${isPublic ? 'linear-gradient(135deg, #10b981, #059669)' : 'linear-gradient(135deg, #8b5cf6, #7c3aed)'};
-            border: 3px solid white;
-            border-radius: 50% 50% 50% 0;
-            transform: rotate(-45deg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            cursor: pointer;
-            transition: all 0.2s ease;
-          ">
-            <div style="
-              transform: rotate(45deg);
-              color: white;
-              font-size: 14px;
-              font-weight: bold;
-              text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-            ">
-              ${isPublic ? '🌐' : '🔒'}
-            </div>
-          </div>
-        `,
-        className: 'custom-pin',
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -32]
-      });
-
-      // Generate share link for this pin
-      const baseUrl = window.location.origin;
-      const shareLink = `${baseUrl}?lat=${pin.lat.toFixed(6)}&lng=${pin.lng.toFixed(6)}&zoom=15&pinId=${pin.id}`;
-
-      const marker = L.marker([pin.lat, pin.lng], { icon })
-        .addTo(map)
-        .bindPopup(`
-          <div class="pin-popup">
-            <h3 class="font-semibold text-sm mb-1">${pin.name}</h3>
-            <p class="text-xs text-muted-foreground mb-2">${isPublic ? 'Public memory' : 'Private memory'}</p>
-            <p class="text-xs text-muted-foreground mb-3">Tap to unlock</p>
-            
-            <div class="share-section">
-              <p class="text-xs text-muted-foreground mb-2">Share this pin:</p>
-              <div class="share-link-container">
-                <input type="text" value="${shareLink}" readonly class="share-link-input" onclick="this.select()" />
-                <button onclick="copyShareLink('${shareLink}')" class="copy-btn">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        `)
-        .on('click', () => onPinClick(pin));
-      
-      currentMarkers[pin.id] = marker;
-    });
+    // Pins are invisible - no markers rendered, only click detection works
 
     // Manage user location marker
     if (userLocation && !currentMarkers['user-location']) {

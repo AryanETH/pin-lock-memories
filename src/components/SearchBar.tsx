@@ -78,7 +78,7 @@ export default function SearchBar({ onSelectLocation }: SearchBarProps) {
       </div>
 
       {showResults && results.length > 0 && (
-        <div className="absolute top-full mt-2 w-full glass-card rounded-xl shadow-xl border border-white/20 overflow-hidden z-50 max-h-64 overflow-y-auto">
+        <div className="absolute top-full mt-2 w-full glass-card rounded-xl shadow-xl border border-white/20 overflow-hidden z-[9999] max-h-64 overflow-y-auto">
           {results.map((result) => (
             <button
               key={result.place_id}
@@ -92,7 +92,7 @@ export default function SearchBar({ onSelectLocation }: SearchBarProps) {
       )}
 
       {isLoading && showResults && (
-        <div className="absolute top-full mt-2 w-full glass-card rounded-xl shadow-xl border border-white/20 p-4 z-50">
+        <div className="absolute top-full mt-2 w-full glass-card rounded-xl shadow-xl border border-white/20 p-4 z-[9999]">
           <p className="text-sm text-muted-foreground text-center">Searching...</p>
         </div>
       )}
