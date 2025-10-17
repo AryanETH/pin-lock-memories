@@ -1,1 +1,4 @@
 project_id = "lcodthemqiwazwdlwnmv"
+
+[functions.get-location-fact]
+verify_jwt = false

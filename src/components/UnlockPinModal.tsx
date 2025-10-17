@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Unlock, Lock } from 'lucide-react';
+import { X, Unlock, Lock, Trash2, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { verifyPin } from '@/lib/crypto';
-import { Pin, recordFailedAttempt, clearFailedAttempts } from '@/lib/db';
+import { Pin, recordFailedAttempt, clearFailedAttempts, deletePin } from '@/lib/db';
 import { toast } from 'sonner';
 
 interface UnlockPinModalProps {
@@ -12,12 +12,14 @@ interface UnlockPinModalProps {
   onClose: () => void;
   pin: Pin | null;
   onUnlock: (pin: Pin) => void;
+  onDelete?: (pin: Pin) => void;
 }
 
-export default function UnlockPinModal({ isOpen, onClose, pin, onUnlock }: UnlockPinModalProps) {
+export default function UnlockPinModal({ isOpen, onClose, pin, onUnlock, onDelete }: UnlockPinModalProps) {
   const [inputPin, setInputPin] = useState('');
   const [loading, setLoading] = useState(false);
   const [shake, setShake] = useState(false);
+  const [showActions, setShowActions] = useState(false);
 
   const handleSubmit = async () => {
     if (!pin || inputPin.length < 4 || inputPin.length > 8) return;
@@ -31,10 +33,9 @@ export default function UnlockPinModal({ isOpen, onClose, pin, onUnlock }: Unloc
       }
       const isValid = await verifyPin(inputPin, pin.pinHash);
       if (isValid) {
-        onUnlock(pin);
-        toast.success('Memory unlocked! 🔓');
         await clearFailedAttempts(pin.id);
-        handleClose();
+        setShowActions(true);
+        toast.success('PIN verified! 🔓');
       } else {
         setShake(true);
         const attempt = await recordFailedAttempt(pin.id);
@@ -56,7 +57,33 @@ export default function UnlockPinModal({ isOpen, onClose, pin, onUnlock }: Unloc
 
   const handleClose = () => {
     setInputPin('');
+    setShowActions(false);
     onClose();
+  };
+
+  const handleDelete = async () => {
+    if (!pin || !onDelete) return;
+    try {
+      await deletePin(pin.id);
+      onDelete(pin);
+      toast.success('Memory deleted successfully');
+      handleClose();
+    } catch (error) {
+      toast.error('Failed to delete memory');
+    }
+  };
+
+  const handleShare = () => {
+    if (!pin) return;
+    const shareLink = `${window.location.origin}?lat=${pin.lat.toFixed(6)}&lng=${pin.lng.toFixed(6)}&zoom=15&pinId=${pin.id}`;
+    navigator.clipboard.writeText(shareLink);
+    toast.success('Share link copied! 📋');
+  };
+
+  const handleView = () => {
+    if (!pin) return;
+    onUnlock(pin);
+    handleClose();
   };
 
   return (
@@ -103,30 +130,61 @@ export default function UnlockPinModal({ isOpen, onClose, pin, onUnlock }: Unloc
               </div>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <Input
-                  type="password"
-                  inputMode="numeric"
-                  maxLength={8}
-                  value={inputPin}
-                  onChange={(e) => setInputPin(e.target.value.replace(/\D/g, ''))}
-                  placeholder="Enter PIN"
-                  className="text-center text-2xl tracking-widest"
-                  autoFocus
-                />
-              </div>
+            {!showActions ? (
+              <div className="space-y-4">
+                <div>
+                  <Input
+                    type="password"
+                    inputMode="numeric"
+                    maxLength={8}
+                    value={inputPin}
+                    onChange={(e) => setInputPin(e.target.value.replace(/\D/g, ''))}
+                    placeholder="Enter PIN"
+                    className="text-center text-2xl tracking-widest"
+                    autoFocus
+                  />
+                </div>
 
-              <Button
-                onClick={handleSubmit}
-                disabled={loading || inputPin.length < 4 || inputPin.length > 8}
-                className="w-full bg-gradient-primary hover:opacity-90 transition-opacity text-white font-semibold"
-                size="lg"
-              >
-                <Unlock className="w-5 h-5 mr-2" />
-                {loading ? 'Unlocking...' : 'Unlock'}
-              </Button>
-            </div>
+                <Button
+                  onClick={handleSubmit}
+                  disabled={loading || inputPin.length < 4 || inputPin.length > 8}
+                  className="w-full bg-gradient-primary hover:opacity-90 transition-opacity text-white font-semibold"
+                  size="lg"
+                >
+                  <Unlock className="w-5 h-5 mr-2" />
+                  {loading ? 'Unlocking...' : 'Unlock'}
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <Button
+                  onClick={handleView}
+                  className="w-full bg-gradient-primary hover:opacity-90 transition-opacity text-white font-semibold"
+                  size="lg"
+                >
+                  <Unlock className="w-5 h-5 mr-2" />
+                  View Memory
+                </Button>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    onClick={handleShare}
+                    variant="secondary"
+                    size="lg"
+                  >
+                    <Share2 className="w-5 h-5 mr-2" />
+                    Share
+                  </Button>
+                  <Button
+                    onClick={handleDelete}
+                    variant="destructive"
+                    size="lg"
+                  >
+                    <Trash2 className="w-5 h-5 mr-2" />
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            )}
           </motion.div>
         </motion.div>
       )}
