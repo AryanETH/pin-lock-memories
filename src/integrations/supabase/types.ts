@@ -49,6 +49,42 @@ export type Database = {
           },
         ]
       }
+      location_stats: {
+        Row: {
+          created_at: string
+          id: string
+          lat: number
+          likes: number
+          lng: number
+          place_name: string
+          saves: number
+          shares: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lat: number
+          likes?: number
+          lng: number
+          place_name: string
+          saves?: number
+          shares?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lat?: number
+          likes?: number
+          lng?: number
+          place_name?: string
+          saves?: number
+          shares?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pins: {
         Row: {
           created_at: string

@@ -70,9 +70,9 @@ export default function SavedFactsMenu({
                       transition={{ delay: index * 0.05 }}
                       className="glass-card p-4 rounded-xl hover:shadow-lg transition-shadow group"
                     >
-                      {fact.imageUrl && (
+                      {fact.imageUrls && fact.imageUrls.length > 0 && (
                         <img
-                          src={fact.imageUrl}
+                          src={fact.imageUrls[0]}
                           alt={fact.placeName}
                           className="w-full h-32 object-cover rounded-lg mb-3"
                         />

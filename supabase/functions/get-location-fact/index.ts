@@ -64,29 +64,24 @@ serve(async (req) => {
       };
     }
 
-    // Now generate an image related to the location
-    const imageResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-image-preview',
-        messages: [
-          {
-            role: 'user',
-            content: `Generate a beautiful, photorealistic image of ${parsedFact.placeName}. The image should be vibrant and capture the essence of this location.`
-          }
-        ],
-        modalities: ['image', 'text']
-      }),
-    });
+    // Fetch real images using Unsplash API
+    console.log('Fetching images for:', parsedFact.placeName);
+    const unsplashResponse = await fetch(
+      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(parsedFact.placeName)}&per_page=3&orientation=landscape`,
+      {
+        headers: {
+          'Authorization': `Client-ID ${Deno.env.get('UNSPLASH_ACCESS_KEY') || 'your-unsplash-key'}`
+        }
+      }
+    );
 
-    let imageUrl = null;
-    if (imageResponse.ok) {
-      const imageData = await imageResponse.json();
-      imageUrl = imageData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    let imageUrls: string[] = [];
+    if (unsplashResponse.ok) {
+      const unsplashData = await unsplashResponse.json();
+      imageUrls = unsplashData.results?.slice(0, 3).map((img: any) => img.urls.regular) || [];
+      console.log('Found images:', imageUrls.length);
+    } else {
+      console.log('Unsplash API failed, using fallback');
     }
 
     return new Response(
@@ -94,7 +89,7 @@ serve(async (req) => {
         fact: parsedFact.fact,
         placeName: parsedFact.placeName,
         distance: parsedFact.distance,
-        imageUrl: imageUrl,
+        imageUrls: imageUrls,
         coordinates: { lat, lng }
       }),
       {

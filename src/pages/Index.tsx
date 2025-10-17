@@ -267,23 +267,25 @@ export default function Index() {
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-gradient-to-br from-background via-background to-primary/5">
-      {/* Saved Facts Menu Button */}
-      <motion.div
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.4 }}
-        className="absolute top-4 left-4 z-10"
-      >
-        <Button
-          variant="secondary"
-          size="icon"
-          onClick={() => setSavedFactsMenuOpen(true)}
-          className="rounded-full shadow-lg backdrop-blur-xl bg-white/80 dark:bg-black/40 hover:bg-white dark:hover:bg-black/60 border border-white/20"
-          title="Saved Facts"
+      {/* Saved Facts Menu Button - Only visible in fact mode */}
+      {factMode && (
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.4 }}
+          className="absolute top-4 left-4 z-10"
         >
-          <Menu className="w-5 h-5" />
-        </Button>
-      </motion.div>
+          <Button
+            variant="secondary"
+            size="icon"
+            onClick={() => setSavedFactsMenuOpen(true)}
+            className="rounded-full shadow-lg backdrop-blur-xl bg-white/80 dark:bg-black/40 hover:bg-white dark:hover:bg-black/60 border border-white/20"
+            title="Saved Facts"
+          >
+            <BookOpen className="w-5 h-5" />
+          </Button>
+        </motion.div>
+      )}
 
       {/* Header Bar */}
       <motion.header
@@ -335,12 +337,12 @@ export default function Index() {
               onClick={() => {
                 setFactMode(!factMode);
                 setCurrentFact(null);
-                toast.success(factMode ? 'Lock Memory Mode' : 'Fact Mode Activated 📖');
+                toast.success(factMode ? 'Lock Memory Mode Activated' : 'Fact Mode Activated 📖');
               }}
               className="rounded-full"
-              title="Fact Where You Tap"
+              title={factMode ? 'Switch to Lock Memory Mode' : 'Fact Where You Tap'}
             >
-              <BookOpen className="w-5 h-5" />
+              {factMode ? <Lock className="w-5 h-5" /> : <BookOpen className="w-5 h-5" />}
             </Button>
           </div>
         </div>
@@ -521,19 +523,16 @@ export default function Index() {
        )}
 
        {/* Fact Card */}
-       {currentFact && (
+       {(loadingFact || currentFact) && (
          <FactCard
            fact={currentFact}
-           onClose={() => setCurrentFact(null)}
+           isLoading={loadingFact}
+           onClose={() => {
+             setCurrentFact(null);
+             setLoadingFact(false);
+           }}
            onSave={saveFact}
          />
-       )}
-
-       {/* Loading Fact Indicator */}
-       {loadingFact && (
-         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[9999] glass-card px-6 py-3 rounded-full">
-           <p className="text-sm font-medium">Discovering facts... 🔍</p>
-         </div>
        )}
 
        {/* Saved Facts Menu */}
