@@ -1,73 +1,74 @@
-# Welcome to your Lovable project
+🕹️ Oplus AI – AI-Powered Social Gaming Platform
 
-## Project info
+Oplus AI is an AI-driven social gaming platform designed to make online gaming more personalized, interactive, and intelligent.
+It enhances how players discover games, connect with others, analyse gameplay, and build a smarter gaming ecosystem around them.
 
-**URL**: https://lovable.dev/projects/797a9d25-e383-438f-8223-5289ad81dad9
+🚀 What is Oplus AI?
 
-## How can I edit this code?
+Oplus AI is a next-generation platform that blends machine learning, player analytics, and AI-powered social features to transform the gaming experience.
 
-There are several ways of editing your application.
+The platform focuses on:
 
-**Use Lovable**
+🎯 Personalized Game Recommendations
+Using ML models to suggest games based on player mood, interests, and behaviour.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/797a9d25-e383-438f-8223-5289ad81dad9) and start prompting.
+🤝 Smart Matchmaking & Social Layer
+AI identifies similar playstyles, connects players, and forms gaming groups automatically.
 
-Changes made via Lovable will be committed automatically to this repo.
+📊 Real-time Gameplay Insights
+Analytics engine shows strengths, weaknesses, performance trends, and improvement tips.
 
-**Use your preferred IDE**
+🛡️ AI-powered Safety & Behaviour Detection
+NLP-based content moderation detects toxicity and harmful behaviour in real time.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+🎨 Creator & Developer Tools
+APIs and analytics dashboards to help creators understand user engagement.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+🎯 Vision
 
-Follow these steps:
+To build India’s first AI-powered social gaming ecosystem, making gaming not just entertainment but a smart, connected, and personalised digital experience.
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+🧠 Core AI Components
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+| Component              | Description                                                    |
+| ---------------------- | -------------------------------------------------------------- |
+| Recommendation Engine  | Suggests games using collaborative and content-based filtering |
+| Player Behaviour Model | Analyses gameplay patterns, engagement, and preferences        |
+| NLP Toxicity Detector  | Detects abusive chat/text using transformer/NLP models         |
+| Analytics Engine       | Provides insights on performance, trends, and gamer progress   |
+| Social Graph Generator | AI-based system to group players and find teammates            |
 
-# Step 3: Install the necessary dependencies.
-npm i
+🧩 Features
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+🔍 Personalized game discovery
+🤝 AI-based matchmaking
+📊 Player performance analytics
+🧠 Real-time insights and suggestions
+💬 Toxicity detection using NLP
+⚡ Micro-communities based on gaming interests
+🔗 APIs for developers and creators
 
-**Edit a file directly in GitHub**
+🛠️ Tech Stack
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Frontend: React / Next.js
+Backend: Node.js / Python (FastAPI)
+Database: MongoDB / PostgreSQL
+AI/ML: Scikit-Learn, TensorFlow/PyTorch (optional), Meta Prophet
+Tools: Docker, GitLab CI/CD, Redis, WebSockets
+Hosting: Render / Railway / Dockerized deployment
 
-**Use GitHub Codespaces**
+🛡️ License
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+This project is licensed under the Apache License 2.0.
+See the LICENSE file for details.
 
-## What technologies are used for this project?
+👨‍💻 Author
 
-This project is built with:
+Aryan Patil
+AI Developer | CSBS Student | Social Tech Innovator
+LinkedIn: your profile link : https://www.linkedin.com/in/aryan686/
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+⭐ Support the Project
 
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/797a9d25-e383-438f-8223-5289ad81dad9) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+If you like Oplus AI or want to use the platform for your organisation or hackathon, drop a message.
+Your support helps build India’s next big AI gaming ecosystem 🇮🇳⚡
